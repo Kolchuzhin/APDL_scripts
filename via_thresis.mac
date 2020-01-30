@@ -1,0 +1,187 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: via_thresis.mac, ANSYS APDL script
+! by <vladimir.kolchuzhin@qieee.org>
+!
+! Issue: 1. Geometric and FE modeling of copper via: 
+!			3D FE-mesh -> *.db
+!	 2. Linear static thermal analysis: T(x,y,z)
+!	    Laplace's equation: [K]*{T}={Q}
+!	 3. Thermal resistance calculation: Rth=dT/Q
+!
+! Rev.:	
+!	2018-02-13 Munich
+!
+!==========================================================================!
+!
+!                      Pin
+!               |||||||||||||||||	Load
+!               vvvvvvvvvvvvvvvvv
+!		o---------------o
+!               |      pad      |
+!		o---o-------o---o
+!                   |  via  |
+!		o---o-------o---o
+!               |      pad      |
+!		o---------------o
+!               \\\\\\\\\\\\\\\\\\       BC
+!
+!                      Tamb
+!      
+!        ASCII-Schematic of the problem
+!
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+FINISH $/CLEAR $/CONTOUR,1,128
+
+/VUP,,Z
+
+/TITLE, steady state heat transfer analysis
+project_name='Rthermal'
+!--------------------------------------------------------------------------!
+
+/PREP7
+
+mm=1e-3		!
+um=1e-6		!
+PI=2*ASIN(1)	!
+
+!-------------------------! geometry parametrs !---------------------------!
+
+n_layers=10	! 6;8;10
+
+radius_via= 60*um
+radius_pad=100*um
+
+hight_via= 25*um
+hight_pad= 12*um
+
+! mesh quality: element size
+el_size=radius_via/4	! 
+
+Tamb=20			! ambient temperature
+Pin=0.1			! heat flow rate: (HEAT), Watt
+
+hight=hight_pad*n_layers+hight_via*(n_layers-1)
+area_pad=PI*radius_pad*radius_pad
+heat_flux=Pin/area_pad	! heat flow rate per area: Heat Fluxes(HFLUX), W/m/m
+
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+
+ !ET,1,SOLID70		!  8-Node 3D thermal brick element
+ET,1,SOLID90		! 20-Node 3D
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS	!
+
+! thermal material properties:
+!kth=1.3			! SiO2 thermal conductivity, W/(m·K)
+!kth=150			! Si   thermal conductivity, W/(m·K)
+!kth=220			! Al   thermal conductivity, W/(m·K)
+kth=380				! Cu   thermal conductivity, W/(m·K)
+
+mp,KXX,1,kth			! thermal conductivity
+ 
+ !mp,RSVX,1,1/58000000		! Cu resistivity
+
+!--------------------------------------------------------------------------!
+!-------------------------------! Geometry !-------------------------------!
+!--------------------------------------------------------------------------!
+
+CYLIND,0,radius_via,0,hight,0,360
+
+*DO,I,1,n_layers,1
+ CYLIND,,radius_pad,(I-1)*(hight_via+hight_pad),(I-1)*(hight_via+hight_pad)+hight_pad,0,360
+*ENDDO
+
+allsel
+vovlap,all
+numcmp,all
+
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+! mesh
+
+ !SMRTSIZE,4		! set smart size meshing level 4 (fine)
+
+MSHAPE,1,3D		! mesh with tetrahedral-shaped elements
+ESIZE,el_size
+
+MAT,1 $TYPE,1
+VMESH,ALL
+
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+
+allsel
+nsel,s,loc,z,0		! bottom
+cm,nodes_bottom,node
+cp,1,TEMP,all
+Nbottom=NDNEXT(0)
+
+allsel
+nsel,s,loc,z,hight
+cm,nodes_top,node
+cp,2,TEMP,all
+Ntop=NDNEXT(0)
+
+!csys,1
+!nsel,s,loc,x,radius_pad
+!cm,nodes_out,node
+
+csys,0
+cmsel,all $allsel
+eplot
+!==========================================================================!
+
+/PNUM,MAT,1 $/NUMBER,1 $EPLOT
+
+ !save,project_name,db,,all
+
+!==========================================================================!
+! apply load and BCs
+
+d,Nbottom,TEMP,Tamb
+
+asel,s,loc,z,hight
+SFA,all,1,HFLUX,heat_flux
+
+cmsel,all $allsel
+!==========================================================================!
+!==========================================================================!
+/solu
+
+antype,static		! steady state heat transfer analysis
+
+OUTPR,ALL,1
+
+solve
+!==========================================================================!
+!==========================================================================!
+/post1
+
+plns,temp
+!ples,heat
+
+allsel
+FSUM,HEAT
+
+*GET,Q,FSUM,0,ITEM,HEAT		! HEAT= 0.9999991E-01 W
+*GET,Ttop,NODE,Ntop,TEMP	! get temperature at top surface: 27.753
+
+Rth=(Ttop-Tamb)/Q		! 77.5301360 K/W
+*status,Rth
+!==========================================================================!
+!==========================================================================!
+/eof

@@ -1,0 +1,125 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! Filename: memb_sta.mac, ANSYS APDL script
+! by Kolchuzhin V., MMT, ET/IT, TU Chemnitz
+! <vladimir.kolchuzhin@etit.tu-chemnitz.de>
+! Issue:  1. Geometric and FE modeling of rectangular membrane: 
+!             3D FE-mesh -> *.db
+!       2.1. Linear static structural analysis: u(x,y,z)
+!       2.2. Non-Linear static structural analysis: u(x,y,z)
+!             (stress stiffening effect)
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH $/CLEAR $/CONTOUR,1,128
+/VUP,,Z
+!/PLOPTS,VERS,0 $/PLOPTS,DATE,0 $/PLOPTS,TITLE,0 $/PLOPTS,Logo,off
+
+/TITLE, Rectangular membrane
+project_name='Rectangular_Membrane'
+!==========================================================================!
+/PREP7
+
+mm=1e-3
+um=1e-6
+
+!-------------------------! geometry parametrs !---------------------------!
+! rectangular membrane
+memb_a=1000.0*um    ! length
+memb_b=1000.0*um    ! width   
+memb_h=  30.0*um    ! thickness
+
+! mesh quality
+!el_size=5.0**um 
+memb_nx=20
+memb_ny=20
+memb_nz=4
+!----------------------! defines elements types !--------------------------!
+!ET,1,SOLID45 ! 8-Node 3D
+!ET,1,SOLID95 !20-Node 3D
+ET,1,SOLID185 !20-Node 3D
+!-------------------! defines material properties !------------------------!
+EMUNIT,MKS	!
+
+! material properties of <110> Si:
+MP,EX,  1,169e9		! Young's modulus, Pa
+MP,NUXY,1,0.066		! Poisson's ratio
+MP,DENS,1,2329		! density, kg/m3
+
+!------------------------------! FEA Domain !------------------------------!
+BLOCK,-memb_a/2,+memb_a/2,-memb_b/2,+memb_b/2,-memb_h/2,+memb_h/2
+!--------------------------------------------------------------------------!
+! mesh density
+LSEL,S,LOC,X,-memb_a/2*0.8,+memb_a/2*0.8  ! mesh density in x-direction
+LESIZE,ALL,,,memb_nx,,1
+LSEL,ALL
+
+LSEL,S,LOC,Y,-memb_b/2*0.8,+memb_b/2*0.8  ! mesh density in y-direction
+LESIZE,ALL,,,memb_ny,,1
+LSEL,ALL
+
+LSEL,S,LOC,Z,-memb_h/2*0.8,+memb_h/2*0.8  ! mesh density in vertical direction
+LESIZE,ALL,,,memb_nz,,1
+LSEL,ALL
+!--------------------------------------------------------------------------!
+! mesh
+MAT,1
+TYPE,1
+VMESH,ALL
+!--------------------! defines components for BCs !------------------------!
+allsel
+nsel,s,loc,x,-memb_a/2
+nsel,a,loc,x,+memb_a/2
+nsel,a,loc,y,-memb_a/2
+nsel,a,loc,y,+memb_a/2
+cm,nodes_fix,node
+
+allsel
+nsel,s,loc,z,+memb_h/2
+cm,nodes_load,node
+
+! define master nodes
+node1=NODE(0.0,0.0,+memb_h/2)
+node2=NODE(0.0,0.0,0.0)
+node3=NODE(0.0,0.0,-memb_h/2)
+
+cmsel,all $allsel
+eplot
+!==========================================================================!
+ !save,project_name,db,,all
+!==========================================================================!
+! apply load
+press=17.0e6	! uniform pressure load, Pa
+sf,nodes_load,pres,press
+
+! *** linear case: p=17.0e6 Pa <=> u=29.1 um ***
+!--------------------------------------------------------------------------!
+! apply BCs
+cmsel,s,nodes_fix,node
+d,all,all,0.0
+cmsel,all $allsel
+!--------------------------------------------------------------------------!
+/solu
+antype,static ! static analysis
+nlgeom,off    ! linear analysis
+!nlgeom,on    ! nonlinear analysis
+solve
+!==========================================================================!
+/post1
+allsel
+plns,u,sum
+!plns,s,eqv
+!--------------------------------------------------------------------------!
+plns,s,eqv
+*GET,s_eqv_max,PLNSOL,0,MAX
+*GET,s_eqv_min,PLNSOL,0,MIN
+
+plns,u,sum
+*GET,u_sum_max,PLNSOL,0,MAX
+*GET,u_sum_min,PLNSOL,0,MIN
+cmsel,all $allsel
+etable,energie,sene $ssum $*get,Wsene,ssum,,item,energie
+
+/head,off,off,off,off,off,off
+/output,%project_name%,dat,,append
+*VWRITE,press,s_eqv_min,s_eqv_max,u_sum_min,u_sum_max,Wsene
+(6E20.12)
+/output
+!==========================================================================!

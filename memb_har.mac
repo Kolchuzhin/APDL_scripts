@@ -1,0 +1,200 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: memb_har.mac, ANSYS APDL script
+! by Kolchuzhin V., TU Chemnitz, MMT
+! <vladimir.kolchuzhin@etit.tu-chemnitz.de>
+!
+! Issue: 1. Geometric and FE modeling of rectangular membrane: 
+!			3D FE-mesh -> *.db
+!	       2. Linear harmonic structural analysis: |ui(f)|
+!	    load: pressure; acceleration;
+!
+! Rev.:
+!
+!==========================================================================!
+!
+!             y
+! 
+!             ^
+!             |
+!      \\\\\\\|\\\\\\                memb_h
+!      o------|------o                o--o
+!     /|      |      |\               |  |
+!     /|      |      |\               |  |
+!     /|      |      |\               |  |
+!     /|      *------|\---->  x       |  |
+!     /|             |\               |  |
+!     /|             |\               |  |
+!     /|             |\               |  |
+!     /o-------------o\               o--o
+!      //////////////
+!
+!                   ASCII-Schematic of the problem
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH $/CLEAR $/CONTOUR,1,128
+/VUP,,Z
+!/PLOPTS,VERS,0 $/PLOPTS,DATE,0 $/PLOPTS,TITLE,0 $/PLOPTS,Logo,off
+
+/TITLE, Rectangular membrane
+project_name='Rectangular_membrane'
+!--------------------------------------------------------------------------!
+/PREP7
+
+mm=1e-3		!
+um=1e-6		!
+
+!-------------------------! geometry parametrs !---------------------------!
+! rectangular membrane
+
+memb_a=1000.0*um		! length
+memb_b=1000.0*um		! width  
+memb_h=  30.0*um		! thickness
+
+! mesh quality
+!el_size=5.0*um 
+memb_nx=20
+memb_ny=20
+memb_nz=4
+
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+
+!ET,1,SOLID45	! 8-Node 3D
+!ET,1,SOLID95	!20-Node 3D
+ET,1,SOLID185	!20-Node 3D
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS	!
+
+! material properties of <110> Si:
+MP,EX,  1,169e9		! Young's modulus, Pa
+MP,NUXY,1,0.066		! Poisson's ratio
+MP,DENS,1,2329		! density, kg/m3
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+
+BLOCK,-memb_a/2,+memb_a/2,-memb_b/2,+memb_b/2,-memb_h/2,+memb_h/2
+
+!--------------------------------------------------------------------------!
+ LSEL,S,LOC,X,-memb_a/2*0.8,+memb_a/2*0.8	! Mesh density in x-direction
+ LESIZE,ALL,,,memb_nx,,1	  		! 
+ LSEL,ALL
+
+ LSEL,S,LOC,Y,-memb_b/2*0.8,+memb_b/2*0.8	! Mesh density in y-direction
+ LESIZE,ALL,,,memb_ny,,1	  		! 
+ LSEL,ALL
+
+ LSEL,S,LOC,Z,-memb_h/2*0.8,+memb_h/2*0.8	! Mesh density in vertical direction
+ LESIZE,ALL,,,memb_nz,,1	  		! 
+ LSEL,ALL
+!--------------------------------------------------------------------------!
+! mesh
+
+MAT,1
+TYPE,1
+VMESH,ALL
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+
+allsel
+nsel,s,loc,x,-memb_a/2
+nsel,a,loc,x,+memb_a/2
+nsel,a,loc,y,-memb_a/2
+nsel,a,loc,y,+memb_a/2
+cm,nodes_fix,node
+
+allsel
+nsel,s,loc,z,+memb_h/2
+cm,nodes_load,node
+
+cmsel,all $allsel
+eplot
+
+!==========================================================================!
+
+!save,project_name,db,,all
+
+!==========================================================================!
+! apply load
+
+press=17.0e6		! uniform pressure load, Pa <=> u=29.1 um
+
+acel_x=0.0		! 
+acel_y=0.0		! 
+acel_z=9.8		! m/s^2
+
+SF,nodes_load,pres,press	! pressure
+!ACEL,acel_x,acel_y,acel_z	! acceleration
+
+! frequency range
+! see memb_har.mac
+!  0.593279224652E+06	 1. mode
+!  0.365171384512E+07	10. mode
+
+ fini= 200.0e3		! Hz
+ fend=4000.0e3		!
+ f_pnt=40		! number of points within range
+
+!--------------------------------------------------------------------------!
+! apply BCs
+
+cmsel,s,nodes_fix,node
+d,all,all,0.0
+
+cmsel,all $allsel
+!==========================================================================!
+ !key_harm=1		! Harmonic analysis: full method
+ !key_harm=2		! Harmonic analysis: red. method
+ !key_harm=3		! Harmonic analysis: VARIATIONAL TECHNOLOGY (VT)
+ !key_harm=4		! MSM
+
+/solu
+antype,harmonic		! harmonic analysis
+HROPT,FULL		! full harmonic response
+HROUT,ON		! print results as amplitudes and phase angles
+OUTPR,BASIC,1
+
+HARFRQ,fini,fend   	! frequency range
+NSUBST,f_pnt		! number of points within range
+
+solve
+!==========================================================================!
+/post26
+
+!file,file,rst
+!--------------------------------------------------------------------------!
+! Define master nodes
+
+node1=NODE(0.0,0.0,+memb_h/2)
+node2=NODE(0.0,0.0,0.0)
+node3=NODE(0.0,0.0,-memb_h/2)
+!--------------------------------------------------------------------------!
+NSOL,2,node1,U,X,UX	! store UX Displacements
+NSOL,3,node1,U,Y,UY	! store UY Displacements
+NSOL,4,node1,U,Z,UZ	! store UZ Displacements
+!--------------------------------------------------------------------------!
+/GRID,1			! Turn grid on
+/AXLAB,X,'Freq, Hz'	! X-axis label disp
+/AXLAB,Y,'|Uz1|'	! Y-axis label disp
+
+PLCPLX,1 $PLVAR,4	!       phase angle
+PLCPLX,0 $PLVAR,4	! display amplitude UZ (4) at node 1
+ 
+ !PLVAR/PRVAR
+ !0 - Amplitude
+ !1 - Phase angle
+ !2 - Real part
+ !3 - Imaginary part
+!--------------------------------------------------------------------------!
+
+!==========================================================================!

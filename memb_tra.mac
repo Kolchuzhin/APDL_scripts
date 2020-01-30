@@ -1,0 +1,275 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: memb_tra.mac, ANSYS APDL script
+! by Kolchuzhin V., TU Chemnitz, MMT
+! <vladimir.kolchuzhin@ieee.org>
+!
+! Issue: 1. Geometric and FE modeling of rectangular membrane: 
+!			3D FE-mesh -> *.db
+!	 2.1. Linear transient structural analysis: u(x,y,z,t)
+!	  the membrane is subjected to a dynamic pressure load P(t) 
+!	  with a rise time t2 and a maximum value press
+!	 2.2. Linear transient structural analysis: u(x,y,z,t)
+!	  the membrane is subjected to a pulse pressure load P(t) 
+!
+! Applied load-versus-time curve / force-time history:
+!
+! ^ F
+! |
+! |     2             3
+! |     *---->--------*
+! |    /
+! |   /          * - LoadStep
+! |  /           KBC,0
+! | /
+! |/
+! *-----o-------------o---------> time
+! 1
+! dynamic load F(t) with a rise time
+! key_load=1
+!
+! ^ F
+! |
+! |     2
+! o-->--*
+! |     |
+! ^     |         * - LoadStep
+! |     v         KBC,1
+! |     |
+! |     |
+! *-----o---->--------*---------> time
+! 1                   3
+! pulse load F(t)
+! key_load=2
+!
+!==========================================================================!
+!
+!             y
+! 
+!             ^
+!             |
+!      \\\\\\\|\\\\\\                  \\\\
+!      o------|------o                 o---o
+!     /|      |      |\              ->|   |
+!     /|      |      |\              ->|   |
+!     /|      |      |\              ->|   |
+!     /|      *------|\----> x  P(t) ->| *-|----> z
+!     /|             |\              ->|   |
+!     /|             |\              ->|   |
+!     /|             |\              ->|   |
+!     /o-------------o\                o---o
+!      //////////////                  ////
+!
+!           memb_a                    memb_h
+!
+!                   ASCII-Schematic of the problem
+!==========================================================================!
+!
+! Rev.: 2017-11-02 GT22
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+FINISH $/CLEAR $/CONTOUR,1,128
+/VUP,,Z
+
+ !/PLOPTS,VERS,0 $/PLOPTS,DATE,0 $/PLOPTS,TITLE,0 $/PLOPTS,Logo,off
+
+/TITLE, Rectangular membrane
+
+project_name='Rectangular_membrane'
+!--------------------------------------------------------------------------!
+
+/PREP7
+
+mm=1e-3		!
+um=1e-6		!
+
+!-------------------------! geometry parametrs !---------------------------!
+
+! rectangular membrane
+
+memb_a=1000.0*um		! length
+memb_b=1000.0*um		! width   
+memb_h=  30.0*um		! thickness
+
+! mesh quality
+!el_size=5.0**um 
+memb_nx=20
+memb_ny=20
+memb_nz=4
+
+
+freq1=0.59328E+06		! first eigenfrequency from modal analysis
+
+Q=10                      ! quality factor
+dr=1.0/Q/2.0              ! damping ratio
+beta=2*dr/(2*3.13*freq1)	! the stiffness matrix multiplier for damping
+
+
+!key_load=1	! pressure load P(t) with a rise time
+key_load=2	! pulse pressure load P(t) 
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+
+!ET,1,SOLID45	! 8-Node 3D
+!ET,1,SOLID95	!20-Node 3D
+ET,1,SOLID185	!20-Node 3D
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS
+
+! material properties of <110> Si:
+MP,EX,  1,169e9		! Young's modulus, Pa
+MP,NUXY,1,0.066		! Poisson's ratio
+MP,DENS,1,2329		! density, kg/m3
+
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+
+BLOCK,-memb_a/2,+memb_a/2,-memb_b/2,+memb_b/2,-memb_h/2,+memb_h/2
+
+!--------------------------------------------------------------------------!
+ LSEL,S,LOC,X,-memb_a/2*0.8,+memb_a/2*0.8	! mesh density in x-direction
+ LESIZE,ALL,,,memb_nx,,1
+ LSEL,ALL
+
+ LSEL,S,LOC,Y,-memb_b/2*0.8,+memb_b/2*0.8	! mesh density in y-direction
+ LESIZE,ALL,,,memb_ny,,1
+ LSEL,ALL
+
+ LSEL,S,LOC,Z,-memb_h/2*0.8,+memb_h/2*0.8	! mesh density in z-direction
+ LESIZE,ALL,,,memb_nz,,1
+ LSEL,ALL
+!--------------------------------------------------------------------------!
+! mesh
+
+MAT,1
+TYPE,1
+VMESH,ALL
+
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+
+allsel
+nsel,s,loc,x,-memb_a/2
+nsel,a,loc,x,+memb_a/2
+nsel,a,loc,y,-memb_a/2
+nsel,a,loc,y,+memb_a/2
+cm,nodes_fix,node
+
+allsel
+nsel,s,loc,z,-memb_h/2
+cm,nodes_load,node
+
+cmsel,all $allsel
+eplot
+!--------------------------------------------------------------------------!
+! master nodes
+
+node1=NODE(0.0,0.0,+memb_h/2)
+node2=NODE(0.0,0.0,0.0)
+node3=NODE(0.0,0.0,-memb_h/2)
+
+!==========================================================================!
+
+ !save,project_name,db,,all
+
+!==========================================================================!
+! define load
+
+press=17.0e6	! uniform pressure load, Pa
+! linear case: p=17.0e6 Pa <=> uz=29.1 um
+
+!--------------------------------------------------------------------------!
+! apply BCs
+
+cmsel,s,nodes_fix,node
+d,all,all,0.0
+
+cmsel,all $allsel
+
+!==========================================================================!
+/solu
+
+antype,tran	! transient analysis
+
+TRNOPT,FULL	! full solution method 
+
+ ! FULL  —  Full method (default)
+ ! REDUC  —  Reduced method
+ ! MSUP  —  Mode superposition method
+ ! VT  —  Variational Technology method
+
+
+nlgeom,off	! linear analysis
+!nlgeom,on	! nonlinear analysis / large deflection
+
+
+!ALPHAD,alpha	! the mass matrix multiplier for damping
+BETAD,beta	! the stiffness matrix multiplier for damping
+ ! [C] = alpha[M] + beta[K]
+
+OUTRES,ALL,ALL		  ! save all results
+
+DELTIM,1.0/freq1/20	! integration time step size
+
+ ! for the Newmark time integration scheme, approximately 20 points per cycle 
+ ! of the highest frequency of interest results in a reasonably accurate solution
+
+!--------------------------------------------------------------------------!
+*if,key_load,eq,1,then	! load P(t) with a rise time
+
+p1=0		  $t1=1.0e-9		    ! initial time
+p2=press	$t2=1.0/freq1*10	!     time=10T
+p3=press	$t3=1.0/freq1*20	! end time=20T
+
+KBC,0			! ramped loading
+
+*endif
+!--------------------------------------------------------------------------!
+*if,key_load,eq,2,then	! pulse load P(t)
+
+p1=0		  $t1=1.0e-9		    ! initial time
+p2=press	$t2=1.0/freq1*10	!     time=10T
+p3=0		  $t3=1.0/freq1*20	! end time=20T
+
+KBC,1			! steped loading
+
+*endif
+!--------------------------------------------------------------------------!
+! first load step
+TIME,t1
+sf,nodes_load,pres,p1
+SOLVE
+
+! second load step
+TIME,t2
+sf,nodes_load,pres,p2
+SOLVE
+
+! third load step
+TIME,t3
+sf,nodes_load,pres,p3
+SOLVE
+
+finish
+!==========================================================================!
+/post26
+!FILE,,rdsp
+
+nsol,2,node1,U,Z	! STORE UZ DISPLACEMENTS OF APPROPRIATE node1
+
+!prvar,2		      ! PRINT VARIABLES: #2
+
+/GRID,1			      ! TURN GRID ON
+/AXLAB,Y,DISP	 	  ! Y-AXIS LABEL DISP
+plvar,2			      ! DISPLAY VARIABLES: #2
+
+!==========================================================================!
