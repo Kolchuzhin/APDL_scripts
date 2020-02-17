@@ -1,0 +1,273 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! 
+! Filename: estat.mac, ANSYS APDL script
+! by Kolchuzhin V.A., TU Chemnitz, LMGT
+! <vladimir.kolchuzhin@etit.tu-chemnitz.de>
+! 12.01.2011 13:25
+!
+! Electrostatic analysis: 
+!		parallel plate capacitor with fringing field
+! 		Laplace's equation: [C]{V}={Q}
+!			W_elec=[C]{V}{V}/2
+!			Cap12=2*W_elec/V12**2
+!		uMKSV units
+!
+! Status:
+!
+! Last.rev. 17.02.2020 Munich <vladimir.kolchuzhin@ieee.org>
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!  ^ Z
+!  |
+!  o-----------------------------o  +h_air_blc
+!  |                             |
+!  |                             |
+!  o       o-------------o       o  +h_el2_blc
+!  |       |             |       |
+!  |       | electrode 2 | Vs=1V |
+!  o       o-------------o       o  +gap
+!  |                             |
+!  |           air gap           |
+!  |                             |
+!  o       o-------------o       o  +h_el1_blc
+!  |       |             |       |
+!  |       | electrode 1 | V=0   |
+!  *       o-------------o       o  z=0
+!  |                             |
+!  |                             |
+!  o-----------------------------o -h_air_blc
+!
+! ASCII-Schematic of the problem
+!==========================================================================!
+! options
+
+key_sweep=0			! set: 0/1 - one run/parameter sweep
+
+*IF,key_sweep,NE,1,THEN
+ FINISH $/CLEAR $/CONTOUR,1,128
+*ENDIF
+
+*AFUN,DEG
+/VUP,,Z
+!/PLOPTS,VERS,0
+
+/title, parallel plate capacitor with fringing field
+!--------------------------------------------------------------------------!
+prj_name='ppCap'		! project name
+!==========================================================================!
+
+Vs=1				! load: test votage, V
+
+!---------------------------geometry parametrs-----------------------------!
+mm=1e-3
+um=1e-6
+nm=1e-9
+
+scale=1			! L in um, uMKSV
+
+! mesh quality
+el_size1=scale*50	! element size1
+el_size2=scale*100	! element size2: air box
+nZ=3			! mesh density in z-direction for air gap
+
+
+! air gap
+gap=5*scale
+
+! air box
+l_air_blc=(2000+1000)*scale
+b_air_blc=(2000+1000)*scale
+h_air_blc=        300*scale
+
+! electrode 1
+l_el1_blc=(1000)*scale
+b_el1_blc=(1000)*scale
+h_el1_blc=     5*scale
+
+! electrode 2
+l_el2_blc=l_el1_blc
+b_el2_blc=b_el1_blc
+h_el2_blc=     5*scale
+
+
+*IF,key_sweep,EQ,1,THEN
+	gap=arg1		! *** sweep parameter
+*ENDIF
+!==========================================================================!
+/prep7
+
+!---------------------------material properties----------------------------!
+!emunit,epzro,8.854e-12	! absolute permittivity  MKS
+emunit,epzro,8.854e-06	! absolute permittivity uMKSV
+
+! electrostatic solid element
+ET,1,SOLID122		! electrode1
+ET,2,SOLID122		! electrode2
+ET,3,SOLID122		! air
+
+MP,PERX,1,11.7		! Si
+MP,PERX,2,11.7		! Si
+MP,PERX,3,1.0		! air
+!-------------
+!-----------------------------geometric model------------------------------!
+x1_el1_blc=-l_el1_blc/2
+x2_el1_blc=+l_el1_blc/2
+
+y1_el1_blc=-b_el1_blc/2
+y2_el1_blc=+b_el1_blc/2
+
+z1_el1_blc=0.0
+z2_el1_blc=0.0+h_el1_blc
+
+
+x1_el2_blc=-l_el2_blc/2
+x2_el2_blc=+l_el2_blc/2
+
+y1_el2_blc=-b_el2_blc/2
+y2_el2_blc=+b_el2_blc/2
+
+z1_el2_blc=h_el1_blc+gap
+z2_el2_blc=h_el1_blc+gap+h_el2_blc
+
+
+x1_ar_blc=-l_air_blc/2
+x2_ar_blc=+l_air_blc/2
+
+y1_ar_blc=-b_air_blc/2
+y2_ar_blc=+b_air_blc/2
+
+z1_ar_blc=h_el1_blc+gap+h_el2_blc+h_air_blc 
+z2_ar_blc=-h_air_blc
+
+block,x1_el1_blc,x2_el1_blc,y1_el1_blc,y2_el1_blc,z1_el1_blc,z2_el1_blc		! electrode1
+block,x1_el2_blc,x2_el2_blc,y1_el2_blc,y2_el2_blc,z1_el2_blc,z2_el2_blc		! electrode2
+block,x1_el2_blc,x2_el2_blc,y1_el2_blc,y2_el2_blc,z2_el1_blc,z1_el2_blc		! gap
+block,x1_ar_blc,x2_ar_blc,y1_ar_blc,y2_ar_blc,z1_ar_blc,z2_ar_blc		! air box
+
+vovlp,all
+numcmp,all
+
+!vsel,s,volu,,1	! electrode2
+!vsel,s,volu,,2	! electrode1
+!vsel,s,volu,,3	! gap
+!vsel,s,volu,,4	! air
+allsel
+!---------------------------------FE mesh----------------------------------!
+! mesh density in z-direction
+lsel,s,loc,z,1.1*z1_el1_blc+(z2_el1_blc-z1_el1_blc)*0.1,0.9*z2_el1_blc	
+lsel,a,loc,z,1.1*z1_el2_blc,0.9*z2_el2_blc
+lesize,all,,,nZ,,1
+lsel,all
+
+
+esize,el_size1
+mshape,0,3d	! mapped mesh
+vsel,s,volu,,1 $type,1 $mat,1 $vmesh,all
+vsel,s,volu,,2 $type,2 $mat,2 $vmesh,all
+vsel,s,volu,,3 $type,3 $mat,3 $vmesh,all	! air gap
+
+mshape,1,3d	! free mesh
+esize,el_size2
+vsel,s,volu,,4 $type,3 $mat,3 $vmesh,all	! air box
+
+
+allsel
+eplot
+!--------------------------------------------------------------------------!
+! FE model export
+
+*GET,Nmax,NODE,,NUM,MAX
+*GET,Emax,ELEM,,NUM,MAX
+
+!EWRITE,ET_%prj_name%,dat,,0,LONG
+!NWRITE,CT_%prj_name%,dat,,0,LONG
+!--------------------------------------------------------------------------!
+! components description for electrostatic BC
+
+esel,s,mat,,1	! electrode1
+nsel,s,ext
+cp,1,VOLT,all $*get,nCOND1,node,0,num,min
+cm,electrode1,node
+allsel
+
+esel,s,mat,,2	! electrode2
+nsel,s,ext
+cp,2,VOLT,all $*get,nCOND2,node,0,num,min
+cm,electrode2,node
+allsel
+!--------------------------------------------------------------------------!
+cmsel,all $allsel
+
+!/color,num,red,1
+!/color,num,cblue,2
+
+/pbc,u,,1
+/pbc,cp,,1
+/pnum,type,1
+/number,1
+
+!/EDGE,,1 $EPLOT
+/PNUM,TYPE,1 $/NUMBER,1 $EPLOT
+
+!/eof
+!==========================================================================!
+/solu
+
+antype,static
+
+d,nCOND1,VOLT,0		! ground
+d,nCOND2,VOLT,Vs	! load
+
+solve
+!==========================================================================!
+/post1
+set,last
+
+plns,volt
+
+ !PLVECT,EF,,,,VECT,ELEM,OFF
+
+!--------------------------------------------------------------------------!
+! capacitance
+
+allsel
+ETABLE,SENE,SENE $SSUM $*GET,W_elec,SSUM,,ITEM,SENE
+Cap12=2*W_elec/Vs**2
+*status,Cap12		! display capacitance C12
+
+Canalyt=l_el1_blc*b_el1_blc*8.854e-06/gap
+
+/head,off,off,off,off,off,off  
+/output,%prj_name%_cap,dat,,append	
+*VWRITE,gap,Cap12, Canalyt
+(3E20.12)
+/output
+
+!*****************************************
+!Co=0.183330974196E+01 1000x1000um gap=5um
+!*****************************************
+
+!==========================================================================!
+
+/eof
+
+!==========================================================================!
+
+esel,s,mat,,1	! electrode1
+esel,a,mat,,2	! electrode2
+
+
+!==========================================================================!
+WPOFFS,10,0,0		! Offset the working plane for cross-section view
+!WPROTA,0,0,90		! Rotate working plane Z0Y
+WPROTA,0,90,0		! Rotate working plane Z0X
+
+/CPLANE,1		! Cutting plane defined to use the WP
+/TYPE,1,8		! QSLICE display
+PLNSOL,VOLT,,0,1
+!--------------------------------------------------------------------------!
+/IMAGE,SAVE,ppCap,bmp
+/ui,copy,save,emf,graph,color,reverse,portrait,yes,iqual
+!==========================================================================!
