@@ -3,19 +3,15 @@
 # Various scripts for ANSYS Mechanical APDL
 
 
-beam_sta.mac - static structural analysis
-
-
-memb_sta.mac - static structural analysis
-
-memb_har.mac - harmonic structural analysis
-
-memb_mod.mac - modal structural analysis
-
-memb_tra.ma - transient structural analysis
-
-
-via_thresis.mac - static thermal analysis
-
-
-estat.mac - electrostatic analysis
+| macros          |    domain      |  analysis |  description                        |
+|:---------------:|:--------------:|:---------:|:------------------------------------|
+| beam_sta.mac    |  srtructural   | static    | Si microcantilever, point load      |
+|                 |                |           |                                     |
+| memb_sta.mac    |  srtructural   | static    | Si membrane, pressure load          |
+| memb_mod.mac    |  srtructural   | modal     | Si membrane, pressure load          |
+| memb_har.mac    |  srtructural   | harmonic  | Si membrane, pressure load          |
+| memb_tra.mac    |  srtructural   | transient | Si membrane, pressure load          |
+|                 |                |           |                                     |
+| estat.mac       |  elecrtostatic | static    | parallel plate capacitor            |
+|                 |                |           |                                     |
+| via_thresis.mac |  thermal       | static    | heat conduction, thermal resistance |
