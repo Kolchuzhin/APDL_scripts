@@ -1,0 +1,174 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: wire_dc.mac, ANSYS APDL script
+! by Kolchuzhin V., TU Chemnitz, MMT
+! <vladimir.kolchuzhin@etit.tu-chemnitz.de>
+!
+! Issue: 1. Geometric and FE modeling: 
+!			3D FE-mesh -> *.db
+!	 2. Steady-state current conduction analysis:
+!           determines the current density and electric potential distribution
+!           caused by direct current (DC) or potential drop: V(x,y,z)
+!	 3. R=Vs*Vs/P or R=P/Is/Is
+!
+! Rev.:  18. Oktober 2015
+!
+! Ref.:  12.4. Steady-State Current Conduction Analysis
+!==========================================================================!
+!
+!      	            y
+! 
+!                   ^
+!  cond1            |            cond2
+!                   |                             h_wire
+!     >o------------o------------o<                o---o
+!     >|            |            |<                |   | 
+! 0V  >|            |            |<  Vs/Is         |   |
+!     >|            *------------------>  x        |   | w_wire
+!     >|            |            |<                |   |
+!     >|            |            |<                |   |
+!     >o------------o------------o<                o---o
+!
+!                 l_wire
+
+
+!                   ASCII-Schematic of the problem
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+FINISH $/CLEAR $/CONTOUR,1,128
+
+/VUP,,Z
+
+ !/PLOPTS,VERS,0 $/PLOPTS,DATE,0 $/PLOPTS,TITLE,0 $/PLOPTS,Logo,off
+
+/TITLE, Steady-state current conduction analysis
+
+project_name='rectangular_wire'
+!--------------------------------------------------------------------------!
+
+/PREP7
+
+mm=1e-3		!
+
+!-------------------------! geometry parametrs !---------------------------!
+
+l_wire=10.0*mm
+h_wire= 0.5*mm
+w_wire= 4.0*mm
+
+! mesh quality
+el_size=0.25*mm
+
+Vs= 1	! V
+Is= 1	! A
+
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+
+ET,1,SOLID5,9 ! 8-Node 3D Coupled-Field Solid
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS	!
+
+! electrical material properties:
+
+! resistivity, Ohm*m at 20 C:
+rsvx_Ag=1.59e-08
+rsvx_Cu=1.68e-08
+rsvx_Al=2.65e-08
+
+mp,rsvx,1,rsvx_Cu		!
+!--------------------------------------------------------------------------!
+!-------------------------------! Geometry !-------------------------------!
+!--------------------------------------------------------------------------!
+
+ !BLOCK, X1, X2, Y1, Y2, Z1, Z2	! creates a block volume based
+
+BLOCK,-l_wire/2,+l_wire/2,-w_wire/2,+w_wire/2,-h_wire/2,+h_wire/2
+
+!--------------------------------------------------------------------------!
+! mesh
+
+! options for mesh
+!SMRTSIZE,3	! set smart size meshing level 4 (fine)
+!MSHAPE,0,3D	! quadrilateral-shaped elements 
+!MSHAPE,1,3D	! triangle-shaped elements
+!MSHKEY,0	! 0 - free meshing / 1 - mapped meshing 
+
+MSHAPE,0,3D $MSHKEY,1 $ESIZE,el_size
+MAT,1 $TYPE,1
+VMESH,1
+
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+
+nsel,s,loc,x,-l_wire/2		! first/left electrode
+cm,nodes_cond1,node
+
+nsel,s,loc,x,+l_wire/2		! second/right electrode
+cm,nodes_cond2,node
+
+cmsel,all $allsel
+eplot
+
+!==========================================================================!
+
+ !save,project_name,db,,all
+
+!==========================================================================!
+! apply load and BCs
+!-------------------
+
+cmsel,s,nodes_cond1,node
+d,all,volt,0.0
+
+cmsel,s,nodes_cond2,node
+!d,all,volt,Vs
+f,all,amps,Is
+
+cmsel,all $allsel
+
+/PNUM,MAT,0 $/NUMBER,0 $EPLOT
+!==========================================================================!
+/solu
+
+antype,static		! steady state analysis
+
+solve
+!==========================================================================!
+/post1
+
+allsel
+
+plnsol,volt
+!ples,js,sum		! current density
+!ples,amps
+!ples,jheat
+!--------------------------------------------------------------------------!
+POWERH			! Time average power loss (PAVG), Watts
+*STATUS,PAVG		! Parameter defined for power loss (avr), Watts
+ ! PLOSSD		! Element table item for power loss density
+
+!cmsel,all $allsel
+!etable,energie,sene $ssum $*get,Wsene,ssum,,item,energie
+
+!R=Vs*Vs/PAVG
+R=PAVG/Is/Is
+
+*status,R
+
+/head,off,off,off,off,off,off
+/output,%project_name%_R,dat,,append
+*VWRITE,R
+(1E20.12)
+/output
+!==========================================================================!
