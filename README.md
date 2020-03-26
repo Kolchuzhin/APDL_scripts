@@ -3,18 +3,19 @@
 # Various scripts for ANSYS Mechanical APDL
 
 
-| macros          |    domain      |  analysis |  description                          |
-|:---------------:|:--------------:|:---------:|:--------------------------------------|
-| beam_sta.mac    |  srtructural   | static    | Si microcantilever, point load        |
-|                 |                |           |                                       |
-| memb_sta.mac    |  srtructural   | static    | Si membrane, pressure load            |
-| memb_mod.mac    |  srtructural   | modal     | Si membrane, pressure load            |
-| memb_har.mac    |  srtructural   | harmonic  | Si membrane, pressure load            |
-| memb_tra.mac    |  srtructural   | transient | Si membrane, pressure load            |
-|                 |                |           |                                       |
-| estat.mac       |  elecrtostatic | static    | parallel plate capacitor, capacitance |
-|                 |                |           |                                       |
-| via_thresis.mac |  thermal       | static    | heat conduction, thermal resistance   |
+| macros          |    domain          |  analysis |  description                              |
+|:---------------:|:------------------:|:---------:|:------------------------------------------|
+| beam_sta.mac    |  srtructural       | static    | Si microcantilever, point load            |
+|                 |                    |           |                                           |
+| memb_sta.mac    |  srtructural       | static    | Si membrane, pressure load                |
+| memb_mod.mac    |  srtructural       | modal     | Si membrane, pressure load                |
+| memb_har.mac    |  srtructural       | harmonic  | Si membrane, pressure load                |
+| memb_tra.mac    |  srtructural       | transient | Si membrane, pressure load                |
+|                 |                    |           |                                           |
+| estat.mac       |  electrostatic     | static    | parallel plate capacitor, capacitance     |
+| wire_dc.mac     |  electroconduction | static    | current conduction, electrical resistance |
+|                 |                    |           |                                           |
+| via_thresis.mac |  thermal           | static    | heat conduction, thermal resistance       |
 
 
 
