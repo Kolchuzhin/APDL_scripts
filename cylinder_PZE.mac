@@ -1,0 +1,329 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: cylinder_PZE.mac, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue: 1. modeling of PZT-cylinder (drag of the 2D meshed areas)
+!	 2. modal structural analysis
+!	 3. harmonic coupled PZE analysis:
+!            terminal input admittance Y over a frequency range 
+!
+! Rev.: 
+!	2018-09-06 Munich
+!	2020-05-12 GitHub
+!
+! Reference:
+! VM176, FREQUENCY RESPONSE OF ELECTRICAL INPUT ADMITTANCE FOR A
+! PIEZOELECTRIC TRANSDUCER
+!
+! KAGAWA AND YAMABUCHI, 
+! FINITE ELEMENT SIMULATION OF A COMPOSITE PIEZOELECTRIC ULTRASONIC TRANSDUCER, 
+! IEEE TRANS. SONICS AND ULTRASONICS, VOL. SU-26, NO.2, MARCH 1979
+!
+!==========================================================================!
+!
+!             Z
+! 
+!             ^
+!             |       
+!      o------|------o V=Vs*sin(wt)
+!      |      |      | 
+!      |      |      |
+!      |      |      |
+!      |      |      |
+!      |      |      |     
+!      |      |      |     
+!      |      |      |     
+!      o------*------o V=0 (ground) ---->  R
+!      ///////////////
+!
+!                   ASCII-Schematic of the problem
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH $/CLEAR
+/CONTOUR,1,128
+/VUP,,Z
+
+ !/PLOPTS,VERS,0 $/PLOPTS,DATE,0 $/PLOPTS,TITLE,0 $/PLOPTS,Logo,off
+
+/TITLE, 'Piezoelectric (PZE) analysis of PZT-cylinder'
+project_name='PZT_cylinder'
+
+!key_analysis=2	! modal structural analysis
+key_analysis=3	! harmonic coupled PZE analysis
+
+!--------------------------------------------------------------------------!
+
+/PREP7
+
+mm=1e-3
+
+!-------------------------! geometry parametrs !---------------------------!
+! cylinder
+
+R_cyl= 6*mm		! radius
+L_cyl= 8*mm		! length
+kr=  0.6		! factor
+
+
+! mesh quality
+el_size=0.7*mm
+
+! number elements along axis
+ndiv1=7
+ndiv2=5
+ndiv3=8 ! mesh density in z-direction
+
+
+Vs=1			! applied potential, V
+
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+ET,1,PLANE13
+ET,10,SOLID5,0	! 3-D COUPLED-FIELD SOLID: UX, UY, UZ, TEMP, VOLT, MAG
+
+
+! the elements for piezoelectric analysis:
+
+ !PLANE13,  KEYOPT(1) = 7 coupled-field quadrilateral solid 
+ !SOLID5,   KEYOPT(1) = 0 or 3 coupled-field brick 
+ !SOLID98,  KEYOPT(1) = 0 or 3 coupled-field tetrahedron 
+ !PLANE223, KEYOPT(1) = 1001, coupled-field 8-node quadrilateral 
+ !SOLID226, KEYOPT(1) = 1001, coupled-field 20-node brick 
+ !SOLID227, KEYOPT(1) = 1001, coupled-field 10-node tetrahedron 
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS
+
+! [C  6x6] stiffness matrix (ANEL), N/m2
+! [eS 3x3] permittivity at constant strain
+! [e  3x6] piezoelectric stress matrix (PIEZ), C/m2
+
+key_mat_ID=1
+!--------------------------------------------------------------------------!
+! PZT4 polarized along the Z axis
+
+MP,DENS,key_mat_ID,7500		! DENSITY
+
+TB,ANEL,key_mat_ID		! stiffness matrix (ANEL) DATA TABLE
+TBDATA, 1,13.2e10,7.1e10,7.3e10	!
+TBDATA, 7,13.2e10,7.3e10
+TBDATA,12,11.5e10
+TBDATA,16, 3.0e10
+TBDATA,19, 2.6e10
+TBDATA,21, 2.6e10
+
+*if,key_analysis,eq,3,then
+MP,PERX,key_mat_ID,804.6	! permittivity in X and Y directions
+MP,PERZ,key_mat_ID,659.7	! permittivity in Z direction
+
+TB,PIEZ,key_mat_ID		! Piez Mat (PIEZ) DATA TABLE
+TBDATA,16,10.5			! E61 Piezoelectric constant
+TBDATA,14,10.5			! E52 Piezoelectric constant
+TBDATA, 3,-4.1			! E13 Piezoelectric constant
+TBDATA, 6,-4.1			! E23 Piezoelectric constant
+TBDATA, 9,14.1			! E33 Piezoelectric constant
+*endif
+!--------------------------------------------------------------------------!
+
+TBLIS,ALL		! LIST INPUT AND CONVERTED MATRICES
+
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+K, 1,0,0,0
+K,21,0,0,L_cyl
+
+CIRCLE,1,R_cyl	! circular arc lines
+
+K,12,+R_cyl*kr,-R_cyl*0.0,0
+K,13,-R_cyl*0.0,+R_cyl*kr,0
+K,14,-R_cyl*kr,+R_cyl*0.0,0
+K,15,+R_cyl*0.0,-R_cyl*kr,0
+
+! lines
+L,12,13,ndiv1
+L,13,14,ndiv1
+L,14,15,ndiv1
+L,15,12,ndiv1
+
+L,2,12,ndiv2
+L,3,13,ndiv2
+L,4,14,ndiv2
+L,5,15,ndiv2
+
+LSEL,S,,,1,4
+LESIZE,ALL,,,ndiv1
+ALLSEL
+
+L,1,21,ndiv3	! vertical axis
+
+! areas
+AL,5,8,7,6
+AL,3,11,7,12
+AL,12,8,9,4
+AL,4,12,8,9
+AL,1,9,5,10
+AL,2,10,6,11
+
+! mesh areas
+ESIZE,el_size
+TYPE,1 
+MSHAPE,0,2-D 
+AMESH,ALL
+
+! drag
+TYPE,10 $VDRAG,1,2,3,4,5,,13
+
+ET,1,0
+
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+*if,key_analysis,eq,3,then
+NSEL,S,LOC,Z,0		! SELECT NODES AT GROUND ELECTRODE
+CP,1,VOLT,ALL		! COUPLE VOLT DOF ON ELECTRODE
+*GET,N1,NODE,,NUM,MIN	! GET NODE ON ELECTRODE
+allsel
+
+NSEL,S,LOC,Z,L_cyl	! SELECT NODES AT TOP ELECTRODE
+CP,2,VOLT,ALL		! COUPLE VOLT DOF ON ELECTRODE
+*GET,N2,NODE,,NUM,MIN	! GET NODE ON ELECTRODE
+allsel
+*endif
+
+NSEL,S,LOC,Z,0		! fixed nodes
+cm,nodes_fix,node
+
+cmsel,all $allsel
+!--------------------------------------------------------------------------!
+! apply BCs
+
+cmsel,s,nodes_fix,node
+D,all,UX,0.0
+D,all,UY,0.0
+D,all,UZ,0.0
+
+allsel
+
+*if,key_analysis,eq,3,then
+ D,N1,VOLT,0.0	! apply VOLT to ground electrode
+ D,N2,VOLT,Vs	! apply VOLT to top electrode
+*endif
+
+cmsel,all $allsel
+eplot
+!--------------------------------------------------------------------------!
+
+ !save,project_name,db,,all
+
+!--------------------------------------------------------------------------!
+!==========================================================================!
+
+!==========================================================================!
+*if,key_analysis,eq,2,then ! modal structural analysis
+!==========================================================================!
+/solu
+
+num_mode=10			! total number of modes
+
+antype,modal			! modal analysis
+modopt,lanb,num_mode
+mxpand,num_mode
+ !pstress,on
+
+solve
+!==========================================================================!
+/post1
+
+*DIM,fmod,,num_mode,1		! array num_modex1
+
+*DO,I,1,num_mode,1
+
+  SET,1,I $PLDISP,1 $PLNS,U,SUM
+  *GET,fmod(I),ACTIVE,,SET,FREQ
+
+  /VIEW,,1,1,1
+  /ui,copy,save,emf,graph,color,reverse,portrait,yes,iqual	! hard copy
+
+*ENDDO
+!.....................
+/OUT,%project_name%_mode_fq,dat
+*VWRITE,fmod(1)
+(E20.12)
+/OUT
+!--------------------------------------------------------------------------!
+/DSCALE,,AUTO 
+!/DSCALE,,1	! do not scale displacements 
+
+SET,1,1		! set first mode
+allsel
+plns,u,sum
+
+!==========================================================================!
+*endif ! modal structural analysis
+!==========================================================================!
+
+!==========================================================================!
+*if,key_analysis,eq,3,then ! ! harmonic coupled PZE analysis
+!==========================================================================!
+/solu
+
+freq_start= 20.0e3
+freq_end=  400.0e3
+freq_pnt=500
+
+EQSLV,SPARSE			! USING SPARSE MATRIX SOLVER
+ANTYPE,HARMIC			! PERFORM HARMONIC ANALYSIS
+OUTRES,ALL,ALL			! STORE EVERY SUBSTEP
+
+HARFRQ,freq_start,freq_end	! frequency range in the harmonic response analysis
+NSUBST,freq_pnt
+
+KBC,1				! STEP BOUNDARY CONDITIONS
+ !EQSLV,ICCG 			! ICCG SOLVER
+EQSLV,SPARSE 			! SPARSE SOLVER
+SOLVE
+!==========================================================================!
+/post1
+
+set,last
+plns,volt
+!plns,u,sum
+
+!/DSCALE,,AUTO 
+!/DSCALE,,1	! do not scale displacements 
+/VIEW,,1,1,1
+/ui,copy,save,emf,graph,color,reverse,portrait,yes,iqual	! hard copy
+!==========================================================================!
+/POST26
+
+! Admittance Y is calculated as I/V where I is the current and V is the applied potential.
+! The current I is related to the accumulated charge on the electrode surface as I = jwSum(Qi)
+! Sum(Qi) is the summed nodal charge (nodal reaction load). 
+! since the nodal potentials are coupled, only the reaction "load" from the single node 
+! where the voltage is applied is required for the calculation. 
+
+RFORCE,2,N2,AMPS	! STORE CHARGES ON ELECTRODE N2 / summed nodal charge (nodal reaction load)
+
+PI2=3.14159*2.0
+PROD,3,2,1,,MHOS,,,PI2	! CALCULATE ADMITTANCE: (3)=AMPS(2)*FREQ(1)*PI2
+PROD,4,3,,,S,,,1/Vs	! CALCULATE TOTAL ADMITTANCE, Siemens=mho
+
+PRVAR,4			! PRINT ELECTRICAL ADMITTANCE VS.FREQUENCY
+PLVAR,4			! ELECTRICAL ADMITTANCE VS.FREQUENCY
+
+/OUT,%project_name%_admittance_fh,dat
+PRVAR,4
+/OUT
+
+!==========================================================================!
+*endif ! harmonic coupled PZE analysis
+!==========================================================================!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx! 
