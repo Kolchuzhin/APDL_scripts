@@ -18,15 +18,12 @@
 | via_thresis.mac |  thermal           | static    | heat conduction, thermal resistance       |
 
 
-
-
+macros: cylinder_PZE.mac
+domain/analysis: harmonic coupled PZE analysis
+description: Piezoelectric (PZE) analysis of PZT-cylinder, terminal input admittance
 
 macros: sphere_hf_sc.mac 
-
 https://github.com/Kolchuzhin/dielectric_functions_for_plasmonics/tree/master/scattering_by_sphere
-
 domain: HF Emag
-
 analysis: harmonic 
-
 description: high-frequency (HF) electormagnetic (plane wave) scattering by sphere (Rsphere << wavelength) using HF119 element, SAR calculation
