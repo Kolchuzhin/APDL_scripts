@@ -1,0 +1,289 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: sphere_hf_sc.mac, ANSYS APDL script
+! by Kolchuzhin V., MMT, TU Chemnitz 
+! <vladimir.kolchuzhin@etit.tu-chemnitz.de>
+! + Semiconductor Physics Group, TU Chemnitz, www.ters-team.com
+!
+!
+! Issue: 
+!	1. FE-modeling (geometry+mesh) using prep7: 
+!			sphere (half model)+components for BCs --> *.db
+!			Rsphere << wavelength
+!	2. FE-high-frequency analysis using HF119 element
+!
+! Reference:	ANSYS Advanced Wave Scattering Examples, e.g.:
+!		Harmonic Analysis for Scattering of a Dielectric Sphere 
+!			
+!
+! Last rev.:  	    	08:48 05.11.2014
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+! begin level
+
+FINISH	$/CLEAR
+
+project_name='sphere'
+
+/filename,project_name	! set jobname for the analysis
+
+!==========================================================================!
+!==========================================================================!
+/prep7		! model creation preprocessor
+
+/VUP,,Z
+
+/title, Scattering of a plasmonic sphere using HF119 element
+
+
+! Unit: the only unit system supported for HF-analysis is the MKS unit
+
+EMUNIT,MKS
+
+
+*SET,pi,2*ASIN(1)   
+*SET,mu_0,4*pi*1e-7 		! free-space permeability, H/m
+*SET,eps_0,8.854e-12		! free-space permittivity, F/m
+*SET,Zimp,sqrt(mu_0/eps_0)	! 
+*SET,nm,1e-9
+
+scale=nm
+
+!--------------------------------------------------------------------------!
+! material properties: dielectric functions
+
+	arg2=514.0*nm		! WAVELENGTH, GREEN
+	arg3=-9.125983252	! real(epsilon): Ag
+	arg4= 0.78760789047	! imag(epsilon): Ag
+	!arg3=-4.059523303	! real(epsilon): Au
+	!arg4= 2.734168571	! imag(epsilon): Au
+
+	!arg2=632.8*nm		! WAVELENGTH, RED
+	!arg3=-16.1138		! real(epsilon): Ag
+	!arg4=  0.7487		! imag(epsilon): Ag
+	!arg3=-9.364499351	! real(epsilon): Au
+	!arg4= 1.193765181	! imag(epsilon): Au
+
+	!arg3=1.0		! air
+	!arg4=0.0
+
+
+
+	arg5=1.49e4	! Ag mass density, kg/m^3, for SAR calculation
+	!arg5=1.93e4	! Au mass density, kg/m^3, for SAR calculation
+
+!--------------------------------------------------------------------------!
+! define frequency
+
+wavelength=arg2
+freq=3.0e8/wavelength
+!--------------------------------------------------------------------------!
+! define geometrical parameters
+
+r_sph=10			! radius of the sphere
+h1=r_sph/2			! 
+
+L1=r_sph+4*h1
+L2=   L1+4*h1
+L3=   L2+4*h1
+!--------------------------------------------------------------------------!
+! define elements
+
+et,1,HF119,1		! sphere
+et,2,HF119,1		! air
+et,3,HF119,1,,,1	! perfectly matched layers (PML) element (optional)
+!--------------------------------------------------------------------------!
+! define materials
+
+mp,murx,1,1.0		! sphere: Silver/Gold
+mp,perx,1,arg3
+mp,lsst,1,(-arg4/arg3)	! electric loss tangent
+mp,dens,1,arg5		! mass density, kg/m3, for SAR calculation
+
+! air
+mp,murx,2,1.0
+mp,perx,2,1.0
+!--------------------------------------------------------------------------!
+! define geometry (solid model)
+!
+! o-----------------------o
+! |                       |
+! |   o---------------o   |
+! |   |       ^ z     |   |
+! |   |  o----|----o  |   |
+! |   |  |   ___   |  |   |
+! |   |  |  / | \  | x|   |
+! |   |  |  | x-|---> |   |
+! |   |  |  \___/  |  |   |
+! |   |  |         |  |   |
+! |   |  o---------o  |   |
+! |   |               |   |
+! |   o---------------o   |
+! |                       |
+! o-----------------------o
+!
+! ASCII-Schematic of the model
+
+
+sphere,0,r_sph,0,180
+
+block,-L1,L1,0,L1,-L1,L1
+block,-L2,L2,0,L2,-L2,L2
+block,-L3,L3,0,L3,-L3,L3
+
+vsbv,4,3,,dele,keep
+vsbv,3,2,,dele,keep
+vsbv,2,1,,dele,keep
+vglue,all
+
+vplot
+
+
+! volume definition:  
+!			v1 	- dielectric sphere
+!			v3, v4	- air
+!			v5 	- air (PML)
+
+!==========================================================================!
+! meshing
+
+esize,h1	! element size
+
+type,1 $mat,1 $vmesh,1
+type,2 $mat,2 $vmesh,3,4
+type,2 $mat,2 $vmesh,5
+!--------------------------------------------------------------------------!
+! scaling of volumes from a pattern of volumes: nm -> m
+
+IMOVE=1
+vlscale,all,,,scale,scale,scale,0,0,IMOVE
+
+!==========================================================================!
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+
+! define equivalent source surface
+
+nsel,s,loc,x,-L1*scale,L1*scale
+nsel,r,loc,y,0,L1*scale
+nsel,r,loc,z,-L1*scale,L1*scale
+esln,s,1,all
+nsel,s,loc,x,+L1*scale
+nsel,a,loc,x,-L1*scale
+nsel,a,loc,y,+L1*scale
+nsel,a,loc,z,-L1*scale
+nsel,a,loc,z,+L1*scale
+cm,node_mxwf,node
+
+!--------------------------------------------------------------------------!
+! define node-component for Surface Impedance
+
+nsel,s,loc,x,+L3*scale
+nsel,a,loc,x,-L3*scale
+nsel,a,loc,y,+L3*scale
+nsel,a,loc,z,-L3*scale
+nsel,a,loc,z,+L3*scale
+cm,node_impd,node
+
+cmsel,all
+allsel
+
+!==========================================================================!
+! safe FE model + components for BCs
+
+save,project_name,db,,all
+
+!==========================================================================!
+!==========================================================================!
+! define boundary condition
+
+cmsel,s,node_impd,node
+sf,all,IMPD,Zimp
+
+!cmsel,s,node_mxwf,node
+!sf,all,mxwf
+
+cmsel,all
+allsel
+
+!/PSF,MXWF,,1
+!/PSF,IMPD,,1
+
+!==========================================================================!
+! load: incident plane wave
+
+plwave,1,0,0,0,0	! Ex=1 Hy kz
+
+!==========================================================================!
+! perform solution
+
+/solu
+
+antype,harmic
+harfrq,freq
+eqslv,sparse
+
+hfscat,scat	! scattering field output: Esc
+ !hfscat,total	! Etotal = Einc+Esc
+
+solve
+
+!==========================================================================!
+!==========================================================================!
+/post1		! general postprocessor
+
+/CONTOUR,1,128
+SET,1,1,,3	! the amplitude solution 
+
+/VIEW,,0,-1,0
+
+plns,EF,sum	! plot result: magnitude of electric field intensity E
+*get,E_max,plnsol,0,max
+
+!plns,H,sum	! plot result: magnitude of magnetic field intensity H
+!plvect,P	! Pointing vector
+
+
+! screen --> *.emf
+/ui,copy,save,emf,graph,color,reverse,portrait,yes,iqual
+
+!==========================================================================!
+! Joule heat
+
+!ples,jheat	! Joule heat generation per unit volume (time-average)
+
+!==========================================================================!
+! Specific absorption rate (SAR)
+
+! SAR is the time-average specific absorption rate of electromagnetic field 
+! in lossy material, W/kg
+
+esel,s,mat,,1
+etable,SAR,NMISC,20 
+$ssum $*get,SSAR1,ssum,,item,SAR
+
+pletab,SAR
+
+!==========================================================================!
+! Write data to a file: %project_name%_data.dat
+
+/head,off,off,off,off,off,off
+/output,%project_name%_data,dat,,append
+*VWRITE,r_sph,freq,wavelength,E_max,SSAR1
+(5E20.12)
+/output
+
+allsel $plns,EF,sum
+
+!==========================================================================!
+!==========================================================================!
+
+/eof
+
+!==========================================================================!
+!==========================================================================!
