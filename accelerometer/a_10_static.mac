@@ -1,0 +1,69 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: a_10_static, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue:	FE analysis: static structural
+!
+! Input:  *.db file
+! Output: *.db file
+!		
+! Rev.: 10.03.2021
+!
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH
+/CLEAR,NOSTART
+/CONTOUR,1,128
+/VUP,,Z
+
+/TITLE,3d FE model of an accelerometer
+project_name='accelerometer'
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+! resume the database from the database file
+resume,project_name,db
+
+allsel
+eplot
+!==========================================================================!
+!==========================================================================!
+
+!--------------------------------------------------------------------------!
+!------------------------------! Define BCs !------------------------------!
+!--------------------------------------------------------------------------!
+cmsel,s,nodes_set1,node
+d,all,all,0.0
+cmsel,all $allsel $eplot
+!==========================================================================!
+!==========================================================================!
+! apply load
+
+g=9.8*1.0e+6	! units: length/time2: [m/s^2]->[um/s^2]
+
+acel_x=0.0*g	! 
+acel_y=0.0*g	! 
+acel_z=2.0*g	! 
+
+ACEL,acel_x,acel_y,acel_z ! specify the linear acceleration of the structure
+!==========================================================================!
+!==========================================================================!
+!/NERR,9999999,9999999
+/solu
+antype,static
+solve
+!==========================================================================!
+!==========================================================================!
+/post1
+
+plns,u,sum
+
+!SAVE,project_name,db,,ALL	! save model database: ALL, SOLU, MODEL, SAVE
+!==========================================================================!
+!==========================================================================!

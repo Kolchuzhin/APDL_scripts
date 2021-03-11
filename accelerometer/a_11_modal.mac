@@ -1,0 +1,81 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: a_11_modal, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue:	FE analysis: modal: eigenshapes, eigenfrequencies
+!
+! Input:  *.db file
+! Output: *.db file
+!		
+! Rev.: 10.03.2021
+!
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH
+/CLEAR,NOSTART
+/CONTOUR,1,128
+/VUP,,Z
+
+/TITLE,3d FE model of an accelerometer
+project_name='accelerometer'
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+! resume the database from the .db file
+resume,project_name,db
+
+allsel
+eplot
+!==========================================================================!
+!==========================================================================!
+
+!--------------------------------------------------------------------------!
+!------------------------------! Define BCs !------------------------------!
+!--------------------------------------------------------------------------!
+cmsel,s,nodes_set1,node
+d,all,all,0.0
+cmsel,all $allsel $eplot
+
+!==========================================================================!
+!==========================================================================!
+!/NERR,9999999,9999999
+/solu
+!OUTPR,ALL,ALL
+num_mode=10			! total number of modes
+
+antype,modal			! modal analysis
+modopt,lanb,num_mode
+mxpand,num_mode
+ !pstress,on
+solve
+!==========================================================================!
+!==========================================================================!
+/post1
+set,,1
+plns,u,sum
+
+!SAVE,project_name,db,,ALL	! save model database: ALL, SOLU, MODEL, SAVE
+!==========================================================================!
+!==========================================================================!
+/eof
+
+set,list
+
+     1  1238.3             1         1         1                  
+     2  5830.9             1         2         2                  
+     3  10818.             1         3         3                  
+     4  15779.             1         4         4                  
+     5  19143.             1         5         5                  
+     6 0.16544E+06         1         6         6                  
+     7 0.17713E+06         1         7         7                  
+     8 0.26737E+06         1         8         8                  
+     9 0.44353E+06         1         9         9                  
+    10 0.48102E+06         1        10        10 
+!==========================================================================!
+!==========================================================================!
