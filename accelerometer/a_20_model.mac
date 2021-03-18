@@ -1,0 +1,205 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: a_20_model.mac, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue:	FE modeling: 2d mesh -> 3d mesh by vdrag
+!		3d mesh for electrostatic analysis
+!               of a uniaxial polysilicon MEMS accelerometer
+!
+! Input: solid geometry *.cdb file generated using a_00_layout.mac
+! Output: *.db file
+!		
+! Rev.: 16.03.2021
+!	18.03.2021
+!==========================================================================!
+!
+! stackup:
+!
+!     ^ Z
+!     |
+! 300 o xxxx cap xxxxo zd3=zd2+gc
+!     | air
+! 200 o--------------o zd2=zd1+heght
+!     | moving plate |
+! 100 o--------------o zd1=gd
+!     | air
+!   0 o xxxx die xxxxo zd0=0
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH
+/CLEAR,NOSTART
+/CONTOUR,1,128
+/VUP,,Z
+
+/TITLE,3D FE model of an accelerometer for electrostatic analysis
+project_name='accelerometer'
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+! read a file of solid model and database information into the database
+CDREAD,ALL,project_name,cdb
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+/TITLE,3D FE model of an accelerometer for electrostatic analysis
+project_name='accelerometer_esta'
+
+gc=15.8		! the gap between plate corners and cap surface
+heght=15	! the thickness of the moving plate
+gd=1.8		! the gap between plate corners and die surface
+
+zd0=0.0
+zd1=gd
+zd2=zd1+heght
+zd3=zd2+gc
+
+! mesh quality
+el_size=5.0
+le_size=6
+le_size_z1=4
+le_size_z2=4
+!--------------------------------------------------------------------------!
+!-----------------------! define elements types !--------------------------!
+!--------------------------------------------------------------------------!
+!ET,1,PLANE13
+ET,1,MESH200,7	! 3-D quadrilateral with 8 nodes
+
+ !ET,10,SOLID45	 !  8-Node 3D
+ !ET,10,SOLID95	 ! 20-Node 3D
+ !ET,10,SOLID185 ! 20-Node 3D
+
+ET,20,SOLID122	! electrostatic domain: 3-D 20-Node electrostatic solid
+
+!--------------------------------------------------------------------------!
+!--------------------! define material properties !------------------------!
+!--------------------------------------------------------------------------!
+
+eps0=8.85e-06		! free space permittivity F/um
+
+EMUNIT,EPZRO,eps0	! set free space permittivity
+MP,PERX,1,11.7		! relative permittivity of silicon (Si)
+MP,PERX,2, 1.0		! relative permittivity of air
+!--------------------------------------------------------------------------!
+
+a,5,59,50,4 ! new area for air
+aovlop,all
+
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+! 2D mesh
+
+SHPP,off
+
+SMRTSIZE,2		! set smart size meshing level 4 (fine)
+ !MSHKEY,1 $MSHAPE,0,2D	! mapped meshing with quadrilateral-shaped elements 
+MSHAPE,1,3D		! mesh with tetrahedral-shaped elements
+
+ !ESIZE,el_size
+ !LESIZE, NL1,le_size
+
+TYPE,1
+AMESH,ALL
+!==========================================================================!
+! volumes and 3d mesh generation by dragging an area pattern along a path
+
+*GET,KPmax,KP,,NUM,MAX		!
+*GET,LNmax,LINE,,NUM,MAX	!
+
+K0=31 				! *** set number
+K1=100+K0
+K2=200+K0
+K,K1,KX(K0),KY(K0),zd1
+K,K2,KX(K0),KY(K0),zd2
+
+! Z-lines / path
+L,K0,K1,le_size_z1
+L,K1,K2,le_size_z2
+
+! drag
+TYPE,20 $VDRAG,all,,,,,,63,64	! *** set number
+
+! delete 2D elements
+!ET,1,0
+ESEL,S,TYPE,,1 $ACLEAR,ALL $ALLSEL
+
+ESEL,S,TYPE,,20
+EMODIF,ALL,MAT,2
+ALLSEL
+
+NSEL,S,LOC,z,zd1,zd2
+ESLN,S,1
+EMODIF,ALL,MAT,1
+
+VSEL,S,VOLU,,45,46
+ESLV,S
+EMODIF,ALL,MAT,2
+
+!vsel,u,loc,y,KY(31),KY(3)
+!vsel,u,loc,y,KY(6),KY(62)
+
+! anchor:
+!
+! 3     2
+! o-----o
+! |//o//|
+! o-----o
+! 0     1
+
+nsel,s,loc,z,zd0,zd1
+nsel,r,loc,x,KX(47),KX(49)
+nsel,r,loc,y,KY(49),KY(56)
+ESLN,S,1
+EMODIF,ALL,MAT,1
+ALLSEL
+!--------------------------------------------------------------------------!
+!---------------------! define components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+! cond1
+! cond2
+! cond3
+
+! 81 o------------o 31 (-330,-325)
+!    |            |
+!    | cond1      |
+! 61 o------------o  3 (-330,-25)
+!     x <--o
+! 48 o------------o  6
+!    | cond2      |
+!    |            |
+!    |            |
+!    |            |
+! 72 o------------o 62 (-330,435)
+
+
+nsel,s,loc,z,0
+nsel,r,loc,x,KX(31),KX(81)
+nsel,r,loc,y,KY(31),KY(3)
+cm,COND1,node
+
+nsel,s,loc,z,0
+nsel,r,loc,x,KX(6),KX(48)
+nsel,r,loc,y,KY(6),KY(62)
+cm,COND2,node
+
+esel,s,mat,,1
+nsle,s
+cm,COND3,node
+
+cmsel,all $allsel $eplot
+!==========================================================================!
+!*GET,Nmax,NODE,,NUM,MAX !
+!*GET,Emax,ELEM,,NUM,MAX !
+
+!EWRITE,ET_%project_name%,dat,,0,LONG
+!NWRITE,CT_%project_name%,dat,,0,LONG
+
+
+SAVE,project_name,db,,ALL	! save model database: ALL, SOLU, MODEL
+!==========================================================================!
+!==========================================================================!

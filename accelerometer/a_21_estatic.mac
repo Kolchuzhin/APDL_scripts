@@ -1,0 +1,119 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: a_21_estatic, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue:	FE analysis: electostatic
+!	1. electric potential distribution
+!	2. electostatic energy E=C*Vs^2/2 => capacitance C=2E/Vs^2
+!
+! Input:  *.db file generated using a_20_model.mac
+! Output: *.db file
+!		
+! Rev.: 16.03.2021
+! 	18.03.2021
+!==========================================================================!
+! *** HPC Setup: Use "SMP" ***
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH
+/CLEAR,NOSTART
+/CONTOUR,1,128
+/VUP,,Z
+
+/TITLE,3D FE model of an accelerometer for electrostatic analysis
+project_name='accelerometer_esta'
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+! resume the database from the database file
+resume,project_name,db
+
+
+/TITLE,3D electrostatic analysis of an accelerometer
+
+allsel $eplot
+!==========================================================================!
+!==========================================================================!
+
+eps0=8.85e-06		! free space permittivity F/um
+! analytical solution, parallel plate capacitor:
+C13=eps0*660*300/gd	! 0.97350 pF
+C23=eps0*660*410/gd	! 1.33945 pF
+
+Vs=1		! applied voltage, V
+
+key_solu=0	! multiple conductors analysis using CMATRIX
+key_solu=13	! electrostatic field solution for C13 
+!key_solu=23	! electrostatic field solution for C23
+!==========================================================================!
+!==========================================================================!
+*if,key_solu,eq,0,then ! CMATRIX
+
+! electrostatic field solutions 
+! calculating the self and mutual capacitances between multiple conductors
+
+CMATRIX,,'COND',3,1,'CMATRIX'
+
+! Mutual Capacitance between conductors  1. and  2. =    -0.26407E-07
+! Mutual Capacitance between conductors  1. and  3. =     0.97766E+00
+! Mutual Capacitance between conductors  2. and  3. =     0.13345E+01
+
+*endif
+!==========================================================================!
+!==========================================================================!
+*if,key_solu,gt,0,then !
+!--------------------------------------------------------------------------!
+!------------------------------! apply  BCs !------------------------------!
+!--------------------------------------------------------------------------!
+cmsel,s,COND1,node
+cp,1,volt,COND1 $*GET,nCOND1,NODE,0,num,min       ! set of coupled nodes
+
+cmsel,s,COND2,node
+cp,2,volt,COND2 $*GET,nCOND2,NODE,0,num,min       ! set of coupled nodes
+
+cmsel,s,COND3,node
+cp,3,volt,COND3 $*GET,nCOND3,NODE,0,num,min       ! set of coupled nodes
+
+cmsel,all $allsel $eplot
+
+*if,key_solu,eq,13,then
+ d,nCOND1,volt,Vs
+ !d,nCOND2,volt,0.0
+ d,nCOND3,volt,0.0
+*endif
+
+*if,key_solu,eq,23,then
+ !d,nCOND1,volt,0.0
+ d,nCOND2,volt,Vs
+ d,nCOND3,volt,0.0
+*endif
+
+!==========================================================================!
+/solu
+antype,static		! static analysis
+outres,all,all
+solve
+!==========================================================================!
+/post1
+
+cmsel,all $allsel
+
+etable,energie,sene $ssum $*get,Wsene,ssum,,item,energie
+cap_ij=2*Wsene/Vs/Vs
+
+/head,off,off,off,off,off,off
+/output,%project_name%,dat,,append
+*VWRITE,cap_ij,Wsene,C13,C23
+(4E20.12)
+/output
+
+plns,volt
+
+!SAVE,project_name,db,,ALL	! save model database: ALL, SOLU, MODEL
+
+*endif
+!==========================================================================!
+!==========================================================================!

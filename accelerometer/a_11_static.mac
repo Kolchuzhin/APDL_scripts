@@ -1,0 +1,73 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: a_11_static, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue:	FE analysis: linear structural static
+!		load: acceleration; response: uxi, uyi, uzi
+!
+! Input:  *.db file generated using a_10_model.mac
+! Output: *.db file
+!		
+! Rev.: 10.03.2021
+! 	18.03.2021
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH
+/CLEAR,NOSTART
+/CONTOUR,1,128
+/VUP,,Z
+
+/TITLE,3D FE model of an accelerometer
+project_name='accelerometer'
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+! resume the database from the database file
+resume,project_name,db
+
+/TITLE,3D linear structural static analysis of an accelerometer
+
+allsel
+eplot
+!==========================================================================!
+!==========================================================================!
+
+!--------------------------------------------------------------------------!
+!------------------------------! define BCs !------------------------------!
+!--------------------------------------------------------------------------!
+cmsel,s,nodes_set1,node
+d,all,all,0.0
+cmsel,all $allsel $eplot
+!==========================================================================!
+!==========================================================================!
+
+!--------------------------------------------------------------------------!
+!------------------------------! apply load !------------------------------!
+!--------------------------------------------------------------------------!
+g=9.8*1.0e+6	! units: length/time2: [m/s^2] -> [um/s^2]
+
+acel_x=0.0*g	! X axis direction
+acel_y=0.0*g	! Y axis direction
+acel_z=2.0*g	! Z axis direction => Uzmax=0.153946 um
+
+ACEL,acel_x,acel_y,acel_z ! specify the linear acceleration of the structure
+!==========================================================================!
+!==========================================================================!
+/solu
+antype,static
+solve
+!==========================================================================!
+!==========================================================================!
+/post1
+
+plns,u,sum
+
+!SAVE,project_name,db,,ALL	! save model database: ALL, SOLU, MODEL
+!==========================================================================!
+!==========================================================================!
