@@ -1,0 +1,45 @@
+/COM,ANSYS RELEASE 2019 R3           BUILD 19.5      UP20190805       21:05:50
+/PREP7
+/NOPR
+/TITLE,2D layout of an accelerometer                                           
+*IF,_CDRDOFF,EQ,1,THEN     !if solid model was read in
+_CDRDOFF=             !reset flag, numoffs already performed
+*ELSE              !offset database for the following FE model
+*ENDIF
+*SET,I       ,  21.00000000000    
+*SET,NUMAT   ,  21.00000000000    
+*SET,NUMKT   ,  40.00000000000    
+*SET,NUMLT   ,  62.00000000000    
+*SET,PROJECT_NAME,'accelerometer                   '
+*SET,_RETURN ,  0.000000000000    
+*SET,_STATUS ,  1.000000000000    
+*SET,_UIQR   ,  17.00000000000    
+DOF,DELETE
+EXTOPT,ATTR,      0,      0,      0
+EXTOPT,ESIZE,  0,  0.0000    
+EXTOPT,ACLEAR,      0
+TREF,  0.00000000
+IRLF,  0
+BFUNIF,TEMP,_TINY
+ACEL,  0.00000000    ,  0.00000000    ,  0.00000000
+OMEGA,  0.00000000    ,  0.00000000    ,  0.00000000
+DOMEGA,  0.00000000    ,  0.00000000    ,  0.00000000
+CGLOC,  0.00000000    ,  0.00000000    ,  0.00000000
+CGOMEGA,  0.00000000    ,  0.00000000    ,  0.00000000
+DCGOMG,  0.00000000    ,  0.00000000    ,  0.00000000
+
+KUSE,     0
+TIME,  0.00000000
+ALPHAD,  0.00000000
+BETAD,  0.00000000
+DMPRAT,  0.00000000
+DMPSTR,  0.00000000
+CRPLIM, 0.100000000    ,   0
+CRPLIM,  0.00000000    ,   1
+NCNV,     1,  0.00000000    ,     0,  0.00000000    ,  0.00000000
+
+NEQIT,     0
+
+ERESX,DEFA
+/GO
+FINISH

@@ -1,0 +1,411 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! 
+! Filename: rompass1_accelZa.mac, ANSYS APDL
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue: input db/ph model for ROM model generation
+!               of a uniaxial polysilicon MEMS accelerometer (accelZa)
+!
+!	0. a_00_layout.mac  2D-model (KP -> L -> A):
+!					OUTPUT:
+!					accelerometer.cdb
+!					accelerometer.iges
+!
+! (*)	1. rompass1_*.mac  FE-model gen: 
+!	INPUT:				OUTPUT:
+!	accelerometer.cdb		.db  model database
+!	accelerometer.iges		.ph1 structural physic
+!					.ph2 electrostatic physic
+!
+!	2. rompass2_*.mac ROM-model gen:
+! 	2.1 rom model definition
+! 	2.2 eload
+!	2.3 tload
+! 	2.4 modal+selection
+! 	2.5 data sampling
+! 	2.6 data fit
+! 	2.7 vhdl-ams-export
+!
+!					ANSYS ROM DB:
+!					generpass_105.pcs
+!					generpass_105.dec
+!						*.rom
+!
+!					VHDL-AMS model:
+!					     initial.vhdl
+!					   s_ams_105.vhdl
+!					ca13_ams_105.vhdl
+!					ca23_ams_105.vhdl
+!					  transducer.vhdl
+!
+!	3. rompass3_*.mac ROM-model use:
+!
+!		ANSYS ROM DB:
+!		generpass_105.pcs
+!		generpass_105.dec
+!  			    *.rom
+!
+!	4. rompass4_*.mac ROM-model expansion:
+!
+! Ref.: 
+! 1. System level modeling of the micromirror cell. http://dx.doi.org/10.5281/zenodo.19153
+! 2. Physically-Based Reduced Order Modelling of a Uni-Axial Polysilicon MEMS Accelerometer. 
+!    DOI: 10.3390/s121013985. 
+!
+!
+! Last update:
+!
+!       16.03.2021
+!	25.03.2021 a_100_ROM_model.mac
+!	2021-07-08 rompass1_accelZ
+!	2021-07-09 rompass1_accelZa w/o volu in spring/anchor, mapped mesh
+!	2021-07-16 clean
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! stackup:
+!
+!     ^ Z
+!     |
+! 300 o xxxx cap xxxx o zd3=zd2+gc (optional)
+!     | air
+! 200 o---------------o zd2=zd1+heght
+!     | moving  plate |
+! 100 o---------------o zd1=gd
+!     | air
+!   0 o xxxx die xxxx o zd0=0
+!
+!
+!     ^ Z
+!     |
+! 200 o---------------o zd2=zd1+heght
+!     | moving  plate |
+! 100 o---------------o zd1=gd
+!     | air
+!   0 o xxxx die xxxx o zd0=0
+!--------------------------------------------------------------------------!
+! mater nodes location and geometry of electrodes:
+!
+! mn3 o---------------o mn4
+!     |               |
+!     |               |
+!     |               |
+!     | movable       |
+!     | electrode     |
+!     |               |
+!     |               |
+!     | cond3         | 
+! mn1 o---------------o mn2
+!(mn5)
+!
+!
+!  81 o---------------o 31 (-330,-325)
+!     |               |
+!     | cond1         |
+!  61 o---------------o  3 (-330,-25)
+!       x <--o
+!  48 o---------------o  6
+!     | cond2         |
+!     |               |
+!     |               |
+!     |               |
+!  72 o---------------o 62 (-330,435)
+! 
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+FINISH	$/CLEAR
+/NERR,,99999999,,10
+/CONTOUR,1,128
+ !*AFUN,DEG
+/VUP,1,Z
+/VIEW,1,1,-1,1
+/PNUM,TYPE,1
+/NUMBER,1
+/PBC,ALL,1
+
+PI=2*ASIN(1)		! PI
+
+!==========================================================================!
+!==========================================================================!
+/prep7
+
+project_name='accelerometer'
+!--------------------------------------------------------------------------!
+! read a file of solid model and database information into the database
+CDREAD,ALL,project_name,cdb
+!==========================================================================!
+/TITLE,3D FE model database of an accelerometer for ROM model generation
+project_name='accelerometer_ROM'
+!/FILNAME,accelZ
+!--------------------------------------------------------------------------!
+! model geometric parameters
+
+gc=15.8		! the gap between plate corners and cap surface
+heght=15	! the thickness of the moving plate (baseline: 15um)
+gd=1.8		! the gap between plate corners and die surface
+
+ !heght=ARG1	! ***
+
+zd0=0.0
+zd1=gd
+zd2=zd1+heght
+zd3=zd2+gc
+
+! analitycal parameters:
+
+!area_cond1=660*300
+!area_cond2=660*410
+
+!--------------------------------------------------------------------------!
+! mesh quality
+el_size=5.0
+le_size=6
+le_size_z1=4
+le_size_z2=4
+!--------------------------------------------------------------------------!
+
+id_solid=1
+id_air=2
+
+!--------------------------------------------------------------------------!
+!-----------------------! define elements types !--------------------------!
+!--------------------------------------------------------------------------!
+/PREP7
+
+ET,1,SOLID95		! structural domain
+ET,2,SOLID122		! electrostatic domain: 3-D 20-Node electrostatic solid
+ET,5,MESH200,7		! 3-D quadrilateral with 8 nodes
+
+!--------------------------------------------------------------------------!
+!--------------------! define material properties !------------------------!
+!--------------------------------------------------------------------------!
+
+eps0=8.85e-6		! free space permittivity
+
+! orthotropic elastic material properties of the polysilicon film:
+
+MP,EX,1,152.9e9/1e6	! Young's modulus, MPa=1N/um/um
+MP,EY,1,152.9e9/1e6	! Young's modulus, MPa
+MP,EZ,1,130.1e9/1e6	! Young's modulus, MPa
+
+MP,NUXY,1,0.20		! Poisson's ratio
+MP,NUYZ,1,0.28		! Poisson's ratio
+MP,NUXZ,1,0.28		! Poisson's ratio
+
+MP,GXY,1,79.6e9/1e6	! shear modulus, MPa
+MP,GYZ,1,79.6e9/1e6	! shear modulus, MPa
+MP,GXZ,1,79.6e9/1e6	! shear modulus, MPa
+
+
+EMUNIT,EPZRO,eps0	! free space permittivity
+!MP,PERX,1,11.7		! relative permittivity of silicon
+MP,PERX,2, 1.0		! relative permittivity of air
+!--------------------------------------------------------------------------!
+!a,5,59,50,4		! an area for air
+!aovlop,all
+
+LESIZE,ALL,,,4	! ndiv
+
+LESIZE,58,,,10
+LESIZE,57,,,10
+LESIZE,60,,,10
+LESIZE,56,,,10
+
+LESIZE,28,,,20
+LESIZE,26,,,20
+LESIZE,30,,,20
+LESIZE,32,,,20
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+! 2D mesh
+
+SHPP,off
+
+ !ESIZE,el_size
+
+!*DEL,NTset $*DIM,NTset,ARRAY,num_node_set,4
+num_=3
+! *DO,in,1,num_			! loop
+  !NTset(in,2)=NX(n_node_cur)
+  !NTset(in,3)=NY(n_node_cur)
+  !NTset(in,4)=NZ(n_node_cur)
+! *ENDDO
+
+!LESIZE,29,2
+!LESIZE,27,2
+
+SMRTSIZE,3		! set smart size meshing level 4 (fine)
+!MSHKEY,1 $MSHAPE,0,2D	! mapped meshing with quadrilateral-shaped elements 
+!MSHAPE,1,3D		! mesh with tetrahedral-shaped elements
+
+TYPE,5
+AMESH,ALL
+!==========================================================================!
+! volumes and 3d mesh generation by dragging an area pattern along a path
+
+*GET,KPmax,KP,,NUM,MAX		!
+*GET,LNmax,LINE,,NUM,MAX	!
+
+K0=31 				! *** set number
+K1=100+K0
+K2=200+K0
+K,K1,KX(K0),KY(K0),zd1
+K,K2,KX(K0),KY(K0),zd2
+
+! Z-lines / path
+L,K0,K1,le_size_z1	! 63
+L,K1,K2,le_size_z2	! 64
+
+! drag
+TYPE,1 $VDRAG,all,,,,,,63,64	! *** set number
+
+! delete 2D elements
+!ET,5,0
+ESEL,S,TYPE,,5 $ACLEAR,ALL $ALLSEL
+
+ESEL,S,TYPE,,1
+EMODIF,ALL,TYPE,2
+EMODIF,ALL,MAT,2
+ALLSEL
+
+NSEL,S,LOC,z,zd1,zd2	!  solid
+ESLN,S,1
+EMODIF,ALL,TYPE,1
+EMODIF,ALL,MAT,1
+
+! anchor:
+! 3     2
+! o-----o
+! |//o//|
+! o-----o
+! 0     1
+
+nsel,s,loc,z,zd0,zd1
+nsel,r,loc,x,KX(47),KX(49)
+nsel,r,loc,y,KY(49),KY(56)
+ESLN,S,1
+EMODIF,ALL,TYPE,1
+EMODIF,ALL,MAT,1
+
+ESEL,S,TYPE,,id_air $EPLOT	! air
+ESEL,S,TYPE,,id_solid $EPLOT	! solid
+ALLSEL
+!--------------------------------------------------------------------------!
+!---------------------!     define components     !------------------------!
+!--------------------------------------------------------------------------!
+! electrodes:
+! COND1
+! COND2
+! COND3	== movable electrode
+
+!  81 o---------------o 31 (-330,-325)
+!     |               |
+!     | cond1         |
+!  61 o---------------o  3 (-330,-25)
+!       x <--o
+!  48 o---------------o  6
+!     | cond2         |
+!     |               |
+!     |               |
+!     |               |
+!  72 o---------------o 62 (-330,435)
+
+ASEL,S,AREA,,20,21 $ASEL,A,AREA,,9
+NSLA,S,1
+CM,COND1A,AREA
+CM,COND1,NODE		! conductor 1 node component
+
+ASEL,S,AREA,,18,19 $ASEL,A,AREA,,15
+NSLA,S,1
+CM,COND2A,AREA
+CM,COND2,NODE		! conductor 2 node component
+
+asel,s,loc,z,zd1	!$asel,u,area,,107 $asel,u,area,,108
+asel,a,loc,z,zd2	!$asel,u,area,,193 $asel,u,area,,192
+NSLA,S,1
+CM,COND3A,AREA
+CM,COND3,NODE
+
+cmsel,all $allsel
+!--------------------------------------------------------------------------!
+! region for DVMORPH
+
+vsel,s,loc,z,zd0,zd1
+!*** anchor unselect ***
+vsel,u,volu,,4 $vsel,u,volu,,13 $vsel,u,volu,,14
+
+CM,AIR,VOLU		! default name 'AIR'
+VSEL,ALL
+
+ESEL,S,TYPE,,1
+NSLE,S,1
+NSEL,R,LOC,Z,zd1+height/2
+CM,NEUN,NODE		! neutral plane node component
+
+cmsel,all $allsel
+!--------------------------------------------------------------------------!
+
+/EDGE,,0 $EPLOT
+
+!==========================================================================!
+ET,1,0
+            
+PHYSICS,WRITE,ELEC	! write electrostatic physics file
+PHYSICS,CLEAR
+!==========================================================================!
+ET,1,SOLID95		!
+ET,2,0
+!--------------------------------------------------------------------------!
+! restore the material properties
+! orthotropic elastic material properties of the polysilicon film:
+
+MP,EX,1,152.9e9/1e6	! Young's modulus, MPa=1N/um/um
+MP,EY,1,152.9e9/1e6	! Young's modulus, MPa
+MP,EZ,1,130.1e9/1e6	! Young's modulus, MPa
+
+MP,NUXY,1,0.20		! Poisson's ratio
+MP,NUYZ,1,0.28		! Poisson's ratio
+MP,NUXZ,1,0.28		! Poisson's ratio
+
+MP,GXY,1,79.6e9/1e6	! shear modulus, MPa
+MP,GYZ,1,79.6e9/1e6	! shear modulus, MPa
+MP,GXZ,1,79.6e9/1e6	! shear modulus, MPa
+
+MP,DENS,1,2.330e-15	! density, kg/um3
+!--------------------------------------------------------------------------!
+allsel
+!*** anchor select ***
+asel,s,area,,4 $asel,a,area,,13 $asel,a,area,,14
+
+NSLA,S,1
+CM,FIXA,AREA             ! boundary condition must be
+DA,ALL,UX                ! applied on solid model entities
+DA,ALL,UY
+DA,ALL,UZ
+
+ALLSEL
+!--------------------------------------------------------------------------!
+*if,key_prestress,eq,1,then		!
+ !/SOLU
+ !tref,0
+ !tunif,sigm_b*(1-NU_Si)/(E_Si*alpha_Si)
+*endif
+!--------------------------------------------------------------------------!
+PHYSICS,WRITE,STRU	! write structural physics file
+!==========================================================================!
+/prep7
+ET,2,SOLID122
+EPLOT			! plot the entire model
+
+SAVE,project_name,db	! save model database
+!--------------------------------------------------------------------------!
+*GET,Nmax,NODE,,NUM,MAX ! 
+*GET,Emax,ELEM,,NUM,MAX ! 
+
+!EWRITE,ET_%project_name%,dat,,0,LONG
+!NWRITE,CT_%project_name%,dat,,0,LONG
+!==========================================================================!
+!==========================================================================!
