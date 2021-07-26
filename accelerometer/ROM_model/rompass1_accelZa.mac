@@ -56,16 +56,11 @@
 !
 ! Last update:
 !
-!       16.03.2021
-!	25.03.2021 a_100_ROM_model.mac
-!	2021-07-08 rompass1_accelZ
-!	2021-07-09 rompass1_accelZa w/o volu in spring/anchor, mapped mesh
-!	2021-07-16 clean
+!	2021-07-26 clean
 !
 !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
 !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
 ! stackup:
-!
 !
 !     ^ Z
 !     |
@@ -74,6 +69,7 @@
 ! 100 o---------------o zd1=gd
 !     | air
 !   0 o xxxx die xxxx o zd0=0
+!
 !--------------------------------------------------------------------------!
 ! mater nodes location and geometry of electrodes:
 !
