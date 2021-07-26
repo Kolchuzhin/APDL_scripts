@@ -66,16 +66,6 @@
 !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
 ! stackup:
 !
-!     ^ Z
-!     |
-! 300 o xxxx cap xxxx o zd3=zd2+gc (optional)
-!     | air
-! 200 o---------------o zd2=zd1+heght
-!     | moving  plate |
-! 100 o---------------o zd1=gd
-!     | air
-!   0 o xxxx die xxxx o zd0=0
-!
 !
 !     ^ Z
 !     |
@@ -223,19 +213,6 @@ LESIZE,32,,,20
 ! 2D mesh
 
 SHPP,off
-
- !ESIZE,el_size
-
-!*DEL,NTset $*DIM,NTset,ARRAY,num_node_set,4
-num_=3
-! *DO,in,1,num_			! loop
-  !NTset(in,2)=NX(n_node_cur)
-  !NTset(in,3)=NY(n_node_cur)
-  !NTset(in,4)=NZ(n_node_cur)
-! *ENDDO
-
-!LESIZE,29,2
-!LESIZE,27,2
 
 SMRTSIZE,3		! set smart size meshing level 4 (fine)
 !MSHKEY,1 $MSHAPE,0,2D	! mapped meshing with quadrilateral-shaped elements 
@@ -387,12 +364,6 @@ DA,ALL,UY
 DA,ALL,UZ
 
 ALLSEL
-!--------------------------------------------------------------------------!
-*if,key_prestress,eq,1,then		!
- !/SOLU
- !tref,0
- !tunif,sigm_b*(1-NU_Si)/(E_Si*alpha_Si)
-*endif
 !--------------------------------------------------------------------------!
 PHYSICS,WRITE,STRU	! write structural physics file
 !==========================================================================!
