@@ -67,8 +67,8 @@ VMESH,ALL
 allsel
 nsel,s,loc,x,-memb_a/2
 nsel,a,loc,x,+memb_a/2
-nsel,a,loc,y,-memb_a/2
-nsel,a,loc,y,+memb_a/2
+nsel,a,loc,y,-memb_b/2
+nsel,a,loc,y,+memb_b/2
 cm,nodes_fix,node
 
 allsel
