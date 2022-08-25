@@ -71,7 +71,7 @@
 !   0 o xxxx die xxxx o zd0=0
 !
 !--------------------------------------------------------------------------!
-! mater nodes location and geometry of electrodes:
+! master nodes location and geometry of electrodes:
 !
 ! mn3 o---------------o mn4
 !     |               |
