@@ -6,14 +6,20 @@
 ![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png)
 
 ## ANSYS APDL scripts
-
+### general modeling
 * a_00_layout
 * a_10_model
 * a_11_static
 * a_12_modal
 * a_13_harmonic
+
+
+
 * a_20_model
 * a_21_estatic
+### ROM model generation
+* rompass1_accelZa.mac == input db/ph model for ROM model generation of a uniaxial polysilicon MEMS accelerometer (accelZa)
+* rompass2_accelZ.mac == ROM-model generation of a uniaxial polysilicon MEMS accelerometer
 
 ## VHDL-AMS model in hAMSter
 
