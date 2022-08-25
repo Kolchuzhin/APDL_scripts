@@ -6,15 +6,13 @@
 ![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png)
 
 ## ANSYS APDL scripts
-### general modeling
+### general FE modeling
 * a_00_layout
 * a_10_model
 * a_11_static
 * a_12_modal
 * a_13_harmonic
-
-
-
++
 * a_20_model
 * a_21_estatic
 ### ROM model generation
