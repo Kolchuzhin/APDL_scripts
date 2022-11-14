@@ -2,6 +2,9 @@
 
 # Various scripts for ANSYS Mechanical APDL
 
+![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
+
+
 
 | macros          |    domain          |  analysis |  description                              |
 |:---------------:|:------------------:|:---------:|:------------------------------------------|
