@@ -1,6 +1,4 @@
-# APDL_scripts
-
-## Various scripts for ANSYS Mechanical APDL
+# APDL_scripts: various scripts for ANSYS Mechanical APDL
 
 ![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
 
@@ -21,7 +19,7 @@
 | via_thresis.mac |  thermal           | static    | heat conduction, thermal resistance       |
 
 
-## Coupled Piezoelectric (PZE) analysis of PZT-cylinder
+## Coupled PiezoElectric (PZE) analysis of PZT-cylinder
 + macros: [cylinder_PZE.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/cylinder_PZE.mac)
 + domain/analysis: harmonic coupled PZE analysis
 + description: Piezoelectric (PZE) analysis of PZT-cylinder, terminal input admittance
@@ -33,6 +31,14 @@
 + description: high-frequency (HF) electormagnetic (plane wave) scattering by sphere (Rsphere << wavelength) using HF119 element, SAR calculation
 
 ## [FEM analysis of a uniaxial MEMS Accelerometer](https://github.com/Kolchuzhin/APDL_scripts/tree/master/accelerometer)
+
+## Coupled PiezoResistive (PZR) analysis
++ the elements for PZR analysis in ANSYS MAPDL:
+    * PLANE223, KEYOPT(1) = 101 - coupled-field 8-node quadrilateral
+    * SOLID226, KEYOPT(1) = 101 - coupled-field 20-node brick
+    * SOLID227, KEYOPT(1) = 101 - coupled-field 10-node tetrahedron
++ macros: in progress
+
 
 <!--
 | macros          |    domain          |  analysis |  description                              |
