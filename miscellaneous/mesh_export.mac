@@ -1,0 +1,23 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! 
+! Filename: mesh_export.mac, ANSYS MAPDL
+! by <vladimir.kolchuzhin@ieee.org>
+! 17:18 2018-07-06
+!
+! Issue: modeling: mesh export
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+prj_name=arg1
+
+!==========================================================================!
+/prep7
+*GET,Nmax,NODE,,NUM,MAX !
+*GET,Emax,ELEM,,NUM,MAX !
+
+EWRITE,ET_%prj_name%,dat,,0,LONG
+NWRITE,CT_%prj_name%,dat,,0,LONG
+!==========================================================================!
