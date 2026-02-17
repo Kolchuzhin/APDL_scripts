@@ -1,0 +1,265 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: film_thresis_02.mac, ANSYS APDL script
+! by <vladimir.kolchuzhin@qieee.org>
+!
+! Issue: 1. Geometric and FE modeling of thin film on substrate: 
+!			3D FE-mesh -> *.db
+!	 2. Linear static thermal analysis: T(x,y,z)
+!	    Laplace's equation: [K]*{T}={Q}
+!	 3. Thermal resistance calculation: Rth=dT/Q
+!
+! Rev.:	
+!	2025-12-08 Munich
+!
+!==========================================================================!
+!
+!                                  Load: heat_flux=Pin/area
+!                               |||||||||||||||||	
+!                               vvvvvvvvvvvvvvvvv
+!                		o---------------o
+!                               | mat1          |  x---> x
+!		o---------------o---------------o---------------o 
+!               |    mat2                                 SiO2  |
+!		o---------------o---------------o---------------o
+!               |    mat3                                 Si    |
+!               |                                               |
+!		o---------------o---------------o---------------o
+!               \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ BC: Tamb
+!
+!                                     
+!                        ASCII-Schematic of the problem
+!
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+FINISH $/CLEAR $/CONTOUR,1,128	!*** if sweep ***!
+
+/VUP,,Z
+
+/TITLE, steady state linear heat transfer analysis
+project_name='Rthermal'
+!--------------------------------------------------------------------------!
+
+/PREP7
+
+mm=1e-3		!
+um=1e-6		!
+PI=2*ASIN(1)	!
+
+!-------------------------! geometry parametrs !---------------------------!
+
+! top film
+a1=100*um
+b1=100*um
+arg1=2		! 0.5...2.0 um
+h1=arg1*um	!*** if sweep ***!
+
+! 
+a2=300*um
+b2=300*um
+h2=2.0*um	
+
+! substrate
+a3=300*um
+b3=300*um
+h3=110*um	
+
+area1=a1*b1
+
+!--------------------------------------------------------------------------!
+!key_BC=1	! layer 1
+!key_BC=2	! layer 1+2
+key_BC=3	! layer 1+2+3
+
+! mesh quality: element size
+el_size=a1/20		! 
+
+Tamb=20			! ambient temperature
+
+!Pin=1.0		! heat flow rate: (HEAT), Watt
+heat_flux_0=3.0e+4	! 3 W/mm/mm
+
+!heat_flux=Pin/area1	! heat flow rate per area: Heat Fluxes(HFLUX), W/m/m
+heat_flux=heat_flux_0
+
+Pin=heat_flux*area1
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+
+ !ET,1,SOLID70		!  8-Node 3D thermal brick element
+
+ET,1,SOLID90		! 20-Node 3D thermal higher order brick element
+ET,2,SOLID90		! 20-Node 3D thermal higher order brick element
+ET,3,SOLID90		! 20-Node 3D thermal higher order brick element
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS			!
+
+! thermal material properties:
+kth_SiO2=1.3			! SiO2 thermal conductivity, W/(m·K)
+kth_Si=84			! Si   thermal conductivity, W/(m·K)
+kth_Al=220			! Al   thermal conductivity, W/(m·K)
+kth_Cu=380			! Cu   thermal conductivity, W/(m·K)
+kth_AlN=140			! AlN  thermal conductivity, W/(m·K)
+ kth_xx_AlN= 60			! AlN xx thermal conductivity 
+ kth_yy_AlN= 60			! AlN yy thermal conductivity
+ kth_zz_AlN=140			! AlN zz thermal conductivity
+
+! isotropic
+!mp,KXX,1,kth			! thermal conductivity mat1
+mp,KXX,2,kth_SiO2		! thermal conductivity mat2
+mp,KXX,3,kth_Si			! thermal conductivity mat3
+
+! anisotropic 
+mp,KXX,1,kth_xx_AlN		! xx thermal conductivity 
+mp,KYY,1,kth_yy_AlN		! yy thermal conductivity
+mp,KZZ,1,kth_zz_AlN		! zz thermal conductivity
+
+!--------------------------------------------------------------------------!
+!-------------------------------! Geometry !-------------------------------!
+!--------------------------------------------------------------------------!
+
+BLOCK,-a1/2,+a1/2,-b1/2,+b1/2,-h1/2,+h1/2
+
+BLOCK,-a1/2,+a1/2,-b1/2,+b1/2,-h1/2-h2,-h1/2
+BLOCK,-a2/2,+a2/2,-b2/2,+b2/2,-h1/2-h2,-h1/2
+
+BLOCK,-a1/2,+a1/2,-b1/2,+b1/2,-h1/2-h2-h3,-h1/2-h2
+BLOCK,-a2/2,+a2/2,-b2/2,+b2/2,-h1/2-h2-h3,-h1/2-h2
+
+allsel
+vovlap,all
+numcmp,all
+
+ndiv2=5
+L,23,27,ndiv2 $L,11,15,ndiv2 $L,3,19,ndiv2
+L,24,28,ndiv2 $L,12,16,ndiv2 $L,4,18,ndiv2
+L,22,26,ndiv2 $L,10,14,ndiv2 $L,2,17,ndiv2
+L,21,25,ndiv2 $L, 9,13,ndiv2 $L,1,20,ndiv2
+
+V,28,24,23,27,16,12,11,15
+V,16,12,11,15,18,4,3,19
+V,26,22,21,25,14,10,9,13
+V,14,10,9,13,17,2,1,20
+
+allsel
+vovlap,all
+numcmp,all
+
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+! mesh
+
+ndiv3=5
+LSEL,S,loc,z,-h1/2,+h1/2
+LESIZE,ALL,,,ndiv3
+ALLSEL
+
+LSEL,S,loc,z,-h1/2-h2,-h1/2
+LESIZE,ALL,,,ndiv3
+ALLSEL
+
+ !SMRTSIZE,4		! set smart size meshing level 4 (fine)
+ESIZE,el_size
+
+MAT,1 $TYPE,1
+VMESH,1
+
+MAT,2 $TYPE,2
+VMESH,2,5,3
+VMESH,7,9
+
+MAT,3 $TYPE,3
+VMESH,3,4
+VMESH,6
+VMESH,10,11
+
+!/eof
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+*if,key_BC,eq,1,then $h_Tgnd=-h1/2    	 $*endif
+*if,key_BC,eq,2,then $h_Tgnd=-h1/2-h2 	 $*endif
+*if,key_BC,eq,3,then $h_Tgnd=-h1/2-h2-h3 $*endif
+
+allsel
+nsel,s,loc,z,+h1/2
+cm,nodes_top,node
+cp,1,TEMP,all
+Ntop=NDNEXT(0)
+
+allsel
+nsel,s,loc,z,h_Tgnd
+cm,nodes_bottom,node
+cp,2,TEMP,all
+Nbottom=NDNEXT(0)
+
+csys,0
+cmsel,all $allsel
+eplot
+!==========================================================================!
+
+/PNUM,MAT,1 $/NUMBER,1 $EPLOT
+
+ !save,project_name,db,,all
+
+!==========================================================================!
+! apply load and BCs
+
+d,Nbottom,TEMP,Tamb
+
+asel,s,loc,z,+h1/2
+SFA,all,1,HFLUX,heat_flux
+
+cmsel,all $allsel
+!==========================================================================!
+!==========================================================================!
+/solu
+
+antype,static		! steady state heat transfer analysis
+
+OUTPR,ALL,1
+
+solve
+!==========================================================================!
+!==========================================================================!
+/post1
+
+plns,temp
+ !ples,heat
+
+allsel
+ !FSUM,HEAT
+ !*GET,Q,FSUM,0,ITEM,HEAT	! HEAT
+*GET,Ttop,NODE,Ntop,TEMP	! get temperature at top surface: 20.0550919
+
+Q=Pin
+
+Rth=(Ttop-Tamb)/Q		! 183.6396280 K/W
+!*status,Rth
+
+Rth_a=h1/kth_AlN/(a1*b1)
+!*status,Rth_a
+!--------------------------------------------------------------------------!
+! layer1 only:
+!     Temp =  20.0004286
+! PARAMETER Q =    0.3000000000E-03
+! PARAMETER RTH =       1.428571429
+! PARAMETER RTH_A =     1.428571429
+!--------------------------------------------------------------------------!
+/head,off,off,off,off,off,off
+/output,%project_name%_test,dat,,append
+*VWRITE,a1,b1,h1,heat_flux,Rth,Rth_a,Ttop
+(7E20.12)
+/output
+!==========================================================================!
+!==========================================================================!
