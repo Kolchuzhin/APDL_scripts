@@ -2,7 +2,7 @@
 
 ![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
 
-
+# Basic
 
 | macros          |    domain          |  analysis |  description                              |
 |:---------------:|:------------------:|:---------:|:------------------------------------------|
@@ -18,6 +18,10 @@
 |                     |                    |           |                                           |
 | via_thresis.mac     |  thermal           | static    | heat conduction, thermal resistance       |
 | film_thresis_02.mac |  thermal           | static    | heat conduction, thermal resistance       |
+
+| model | macros          |    domain          |  analysis |  description                       |
+|:---------:|:----:|:------------------:|:---------:|:------------------------------------------|
+| ![film_thresis_02](https://github.com/Kolchuzhin/APDL_scripts/blob/master/film_thresis_02.png) | film_thresis_02.mac | thermal | linear static | heat conduction, thermal resistance |
 
 
 ## Coupled PiezoElectric (PZE) analysis of PZT-cylinder
