@@ -15,17 +15,17 @@
 !
 !==========================================================================!
 !
-!                                  Load: heat_flux=Pin/area
+!                           Load: heat_flux=Pin/area
 !                               |||||||||||||||||	
 !                               vvvvvvvvvvvvvvvvv
-!                		o---------------o
+!                             		o---------------o
 !                               | mat1          |  x---> x
-!		o---------------o---------------o---------------o 
+!		             o---------------o---------------o---------------o 
 !               |    mat2                                 SiO2  |
-!		o---------------o---------------o---------------o
+!		             o---------------o---------------o---------------o
 !               |    mat3                                 Si    |
 !               |                                               |
-!		o---------------o---------------o---------------o
+!		             o---------------o---------------o---------------o
 !               \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ BC: Tamb
 !
 !                                     
@@ -82,7 +82,7 @@ el_size=a1/20		!
 Tamb=20			! ambient temperature
 
 !Pin=1.0		! heat flow rate: (HEAT), Watt
-heat_flux_0=3.0e+4	! 3 W/mm/mm
+heat_flux_0=3.0e+6	! 3 W/mm/mm
 
 !heat_flux=Pin/area1	! heat flow rate per area: Heat Fluxes(HFLUX), W/m/m
 heat_flux=heat_flux_0
@@ -240,11 +240,11 @@ plns,temp
 allsel
  !FSUM,HEAT
  !*GET,Q,FSUM,0,ITEM,HEAT	! HEAT
-*GET,Ttop,NODE,Ntop,TEMP	! get temperature at top surface: 20.0550919
+*GET,Ttop,NODE,Ntop,TEMP	! get temperature at top surface: 25.5091888
 
 Q=Pin
 
-Rth=(Ttop-Tamb)/Q		! 183.6396280 K/W
+Rth=(Ttop-Tamb)/Q		! 183.6396278 K/W
 !*status,Rth
 
 Rth_a=h1/kth_AlN/(a1*b1)
