@@ -1,1 +1,4 @@
-placeholder
+
+Reference:
+
+https://www.researchgate.net/publication/326096704_Macromodeling_of_a_Torsion_Microelectromechanical_Resonator
