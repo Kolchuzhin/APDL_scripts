@@ -2,17 +2,17 @@
 
 # FEM analysis of a uniaxial MEMS Accelerometer
 
-
 ![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png)
 
 ## ANSYS APDL scripts
-### general FE modeling
+### layout
 * a_00_layout
+### structural analysis
 * a_10_model
 * a_11_static
 * a_12_modal
 * a_13_harmonic
-+
+### electrostatic analysis
 * a_20_model
 * a_21_estatic
 ### ROM model generation
