@@ -22,6 +22,10 @@
 | model | macros          |    domain          |  analysis |  description                       |
 |:---------:|:----:|:------------------:|:---------:|:------------------------------------------|
 | ![film_thresis_02](https://github.com/Kolchuzhin/APDL_scripts/blob/master/film_thresis_02.png) | film_thresis_02.mac | thermal | linear static | heat conduction, thermal resistance |
+| ![comb_cell](https://github.com/Kolchuzhin/APDL_scripts/blob/master/comb_cell/comb_cell.png) | COMB1a.mac | electrostatic | linear static | capacitance |
+
+
+
 
 
 ## Coupled PiezoElectric (PZE) analysis of PZT-cylinder
