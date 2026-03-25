@@ -1,8 +1,8 @@
 # APDL_scripts: various scripts for ANSYS Mechanical APDL
 
-![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
+# Basic models
 
-# Basic
+![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
 
 | macros          |    domain          |  analysis |  description                              |
 |:---------------:|:------------------:|:---------:|:------------------------------------------|
@@ -17,7 +17,9 @@
 | wire_dc.mac         |  electroconduction | static    | current conduction, electrical resistance |
 |                     |                    |           |                                           |
 | via_thresis.mac     |  thermal           | static    | heat conduction, thermal resistance       |
-| film_thresis_02.mac |  thermal           | static    | heat conduction, thermal resistance       |
+
+
+# Advanced models
 
 | model | macros          |    domain          |  analysis |  description                       |
 |:---------:|:----:|:------------------:|:---------:|:------------------------------------------|
