@@ -1,0 +1,190 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: radiation_cooling.mac, ANSYS APDL script
+! by <vladimir.kolchuzhin@ieee.org>
+!
+! Issue: 
+! 	A block is initially at a temperature Tb. 
+! 	Body loses heat by radiation from surfaces to surroundings at Tamb.
+! 	The temperature Tb of the box at the time_end is simulated.
+!
+! Ref.: ANSYS MEDIA REL. 11.0 (10/27/2006) REF. VERIF. MANUAL: REL. 11.0 
+!	VERIFY,VM192, COOLING OF A BILLET BY RADIATION
+!	THERMAL RADIATION HEAT TRANSFER, SIEGEL AND HOWELL, 2ND EDITION,
+!	PG. 229, PROBLEM NO. 2
+!
+! Rev.:	
+!	2022-04-10 Munich VM192r.mac		tested
+!	2026-06-10 Munich radiation_cooling.mac release
+!
+!==========================================================================!
+!
+!                 ^ ^ ^ ^ ^ ^ ^ ^
+!                 | | | | | | | |
+!		 o---------------o 
+!	     <-- |               |-->
+!            <-- |      o Tb     |-->  P=sigma*area*T^4
+!            <-- |               |-->
+!		 o---------------o
+!                 | | | | | | | |   * Tamb
+!                 v v v v v v v v
+!
+!          ASCII-Schematic of the problem: small copper block
+!==========================================================================!
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+FINISH $/CLEAR $/CONTOUR,1,128
+/VUP,,Z
+
+/TITLE, transient heat transfer analysis: small copper block cooling by radiation
+project_name='radiation_cooling'
+
+!--------------------------------------------------------------------------!
+
+/PREP7
+
+mm=1e-3		!
+um=1e-6		!
+
+PI=2*ASIN(1)	! PI constant
+SB=5.67037E-8	! STEFAN-BOLTZMANN constant W/(m^2K^4)
+
+!-------------------------! geometry parametrs !---------------------------!
+
+a= 10.0*mm		! block length
+b= 10.0*mm		! block  width
+c=  1.0*mm		! block thickness
+
+Xa=a*3			! ref point for Tamb
+
+Tb= 1000		! body temperature, K
+Tamb=300		! ambient temperature, K
+
+
+el_size=b/4		! mesh quality: element size
+
+time_end=200		! time end, sec
+
+key_analysis=4		! transient analysis
+
+!--------------------------------------------------------------------------!
+!----------------------! Defines elements types !--------------------------!
+!--------------------------------------------------------------------------!
+
+ET,1,SOLID70            ! 3-D THERMAL SOLID ELEMENT
+ET,2,SURF152,,,,1,1     ! 3-D THERMAL SURFACE EFFECT ELEMENT
+KEYOPT,2,9,1            ! radiation option
+R,2,1,SB		! form factor = 1, STEFAN-BOLTZMANN constant
+
+!--------------------------------------------------------------------------!
+!-------------------! Defines material properties !------------------------!
+!--------------------------------------------------------------------------!
+EMUNIT,MKS
+
+! thermal material properties:
+kth=380				! Cu   thermal conductivity, W/(mK)
+rho=8950			! Cu   density, kg/m/m/m
+cp=385				! Cu   specific heat capacity C, J/(kgK)
+!--------------------------------------------------------------------------!
+MP,KXX,1,kth			! thermal conductivity
+MP,C,1,cp			! specific heat capacity
+MP,DENS,1,rho			! density
+
+MP,EMIS,2,0.8			! black body emissivity
+!--------------------------------------------------------------------------!
+!-------------------------------! Geometry !-------------------------------!
+!--------------------------------------------------------------------------!
+BLOCK,-a/2,a/2,-b/2,b/2,-c/2,c/2	! block volume
+
+VSUM
+
+volu=a*b*c
+surface_area=2*a*b + 2*a*c + 2*b*c
+!--------------------------------------------------------------------------!
+!------------------------------! FEA Domain !------------------------------!
+!--------------------------------------------------------------------------!
+! mesh
+
+SMRT,OFF
+ !SMRTSIZE,4		! set smart size meshing level 4 (fine)
+
+
+ESIZE,el_size
+MAT,1 $TYPE,1
+VMESH,1			! 3D mesh with SOLID70 element
+
+*GET,Nmax,NODE,,NUM,MAX
+*GET,Emax,ELEM,,NUM,MAX
+
+num_node_max=Nmax
+XNODE=num_node_max+1
+
+TYPE,2 $REAL,2 $MAT,2
+N,XNODE,Xa,Xa,Xa	! define node for radiation
+ESURF,XNODE		! generate surface SURF152 elements
+
+!--------------------------------------------------------------------------!
+!--------------------! Defines components for BCs !------------------------!
+!--------------------------------------------------------------------------!
+csys,0
+cmsel,all $allsel
+eplot
+!==========================================================================!
+
+/PNUM,MAT,1 $/NUMBER,1 $EPLOT
+
+ !save,project_name,db,,all
+
+!==========================================================================!
+! apply load and BCs
+
+cmsel,all $allsel
+!==========================================================================!
+!==========================================================================!
+!*if,key_analysis,eq,4,then
+
+/solu
+antype,transient		! transient heat transfer analysis
+
+SOLCONTROL,0
+D,XNODE,TEMP,Tamb		! specify Tamb ambient absolute temperature
+TUNIF,Tb			! initial Tb absolute temperature
+AUTOTS,ON               
+KBC,1				! step ambient temperature in first time step
+
+DELTIM,time_end/100		! initial integration time step: time_end/100
+OUTRES,,ALL
+OUTPR,NSOL,LAST
+TIME,time_end			! transient time span
+
+solve
+
+!*endif
+!==========================================================================!
+!==========================================================================!
+/post1
+set,last
+
+ples,heat
+plns,temp
+allsel
+
+FSUM,HEAT	! sums the nodal force and moment contributions of elements
+
+ !*GET,Q,FSUM,0,ITEM,HEAT	! [HEAT]=W
+
+!==========================================================================!
+/post26
+
+NSOL,2,1,TEMP,,TEMP	! temperature history
+!PRVAR,2
+
+/AXLAB,X,'Time, s'
+/AXLAB,Y,'Temperature, K'
+PLVAR,2
+!==========================================================================!
+!==========================================================================!
