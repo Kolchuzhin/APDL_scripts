@@ -43,6 +43,9 @@
 
 ## [FEM analysis of a uniaxial MEMS Accelerometer](https://github.com/Kolchuzhin/APDL_scripts/tree/master/accelerometer)
 
+| ![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png) |
+|:---------:|
+
 ## Coupled PiezoResistive (PZR) analysis
 + the elements for PZR analysis in ANSYS MAPDL:
     * PLANE223, KEYOPT(1) = 101 - coupled-field 8-node quadrilateral
