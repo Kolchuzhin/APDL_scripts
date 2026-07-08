@@ -12,7 +12,7 @@
 
 ## ANSYS APDL scripts
 ### solid and FE-models of the torsional resonator
-* (torres_model][https://github.com/Kolchuzhin/APDL_scripts/blob/master/torsional_resonator/torres_model.mac]
+* [torres_model](https://github.com/Kolchuzhin/APDL_scripts/blob/master/torsional_resonator/torres_model.mac)
 
 ## Reference
 https://www.researchgate.net/publication/326096704_Macromodeling_of_a_Torsion_Microelectromechanical_Resonator
