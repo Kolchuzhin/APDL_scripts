@@ -1,6 +1,11 @@
 
 ![comb_cell](https://github.com/Kolchuzhin/APDL_scripts/blob/master/comb_cell/comb_cell.png)
 
+
+different types of data sampling techniques for capacitance in 1D, 3D, and 6D based on
+[COMB1.mac](https://github.com/Kolchuzhin/LMGT_code/blob/master/Jan_Mehner/APDL_scripts/Comb_Cell/COMB1.mac)
+
+
 # Parameters:
 + fi_th=4um				! Comb finger thickness
 + fi_le=40um			! Comb finger length
