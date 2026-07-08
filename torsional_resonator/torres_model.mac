@@ -1,0 +1,338 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+! Filename: torres_model.mac
+! by Kolchuzhin V., TU Chemnitz, LMGT, 12.01.2011 13:25
+! <valdimir.kolchuzhin@etit.tu-chemnitz.de>
+!
+! Issue:	FE-model(solid+mesh) of the torsional resonator in uMKSV units
+!
+!
+! Rev.:
+!		30.05.2011
+!
+!==========================================================================!
+!
+! key_bc=10, structural model (triangular beam):
+!
+!            1
+!            o
+!           / \      ^ Y
+!       L1 /   \ L3  |
+!         /     \    |
+!        o---*---o   *---> X
+!        2   L2  3  
+!
+!
+! key_bc=20, electrostatic model:
+!
+!   14                13
+!   o-----------------o
+!   |        1        |
+!   |        o        |
+!   |   -   / \   -   |   ^ Y
+!   |  //  /   \  \\  |   |
+!   | //  /     \  \\ |   |
+!   | -  o---*---o  - |   *---> X
+!   |    2       3    |
+!   o-----------------o
+!   11                12
+!
+!==========================================================================!
+! Option:
+
+key_run=arg1		! 0/1 - external / internal
+
+
+*IF,key_run,EQ,0,THEN
+ FINISH $/CLEAR $/CONTOUR,1,128
+ mac_name='torres'
+ key_ph=0 $key_bc=10	! structural model
+ key_ph=0 $key_bc=20	! electrostatic model
+ T_unif=0
+*ENDIF
+
+*AFUN,DEG
+!==========================================================================!
+
+!---------------------------geometry parametrs-----------------------------!
+
+! set3 (original)
+tr=  3					! height of triangular beam
+Lr=100					! length of triangular beam
+
+x01=0 $y01=0 $z01=0			! point 1
+alfa=180-54.7*2
+wr=2*tr*SQRT(1/COS(alfa/2)**2-1)	! bottom width
+gap=0.5					! air gap
+
+l_ff=10					! far field size
+b_ff=10
+x02=0 $y02=tr/2				! point 2
+
+de=0.5
+te=tr/2
+
+! mesh quality
+el_size=1/5		! element size
+
+nZ=30			! number of elements along the length (Z)
+nr=NINT(tr/el_size)	! 25
+
+!--------------------------------------------------------------------------!
+/prep7
+
+! Si Material properties, uMKSV units
+
+ !EX_=130e3 $NUXY=0.278		! MPa, <100> Young's modulus/Poisson's ratio
+ EX=169e3   $NUXY=0.066		! MPa, <110> Young's modulus/Poisson's ratio
+ !EX=185e3  $NUXY=0.26		! MPa, <111> Young's modulus/Poisson's ratio
+ DENS=2.329e-15			! kg/(um)**3
+ ALPX=2.6e-6			! 1/K, thermal expansion (7.8e-6)
+ k=90e6				! pW/(um*K), thermal conductivity
+ Cp=699e12			! pJ/(kg*K), heat capacity
+ emunit,epzro,8.854e-6		! free-space permittivity is equal to 8.854E-6 pF/m
+
+MP,EX  ,1,EX
+MP,NUXY,1,NUXY
+MP,DENS,1,DENS
+MP,ALPX,1,ALPX
+mp,KXX,1,k
+mp,C,1,Cp
+
+!--------------------------------------------------------------------------!
+ ! Classical Pure Displacement u Formulation
+ !ET,1,SOLID45,0	! include extra displacement shapes
+ !ET,1,SOLID45,1	! suppress extra displacement shapes
+ !ET,1,SOLID95		! quadratic displacement behavior
+ !ET,1,SOLID186		! quadratic displacement behavior+Mixed u-P formulations
+
+ET,1,PLANE42
+
+ET,21,SOLID45
+ET,22,SOLID45
+ET,23,SOLID45
+ET,24,SOLID45
+
+!==========================================================================!
+! solid  model
+
+! triangle vertices:
+K,1,  0.0+x01, tr+y01,z01
+K,2,-wr/2+x01,0.0+y01,z01
+K,3,+wr/2+x01,0.0+y01,z01
+
+A,1,2,3
+
+!            1
+!            o
+!           / \      ^ Y
+!       L1 /   \ L3  |
+!         /     \    |
+!        o---*---o   *---> X
+!        2   L2  3  
+
+LESIZE,1,,,nr
+LESIZE,2,,,nr
+LESIZE,3,,,nr
+
+! electrodes
+K,32,-wr/2+x01-gap,0.0+y01,z01
+K,33,+wr/2+x01+gap,0.0+y01,z01
+K,34,0.0+x01-gap,tr+y01,z01
+K,35,0.0+x01+gap,tr+y01,z01
+
+K,36,-wr/2+x01-gap-de,0.0+y01,z01
+K,37,+wr/2+x01+gap+de,0.0+y01,z01
+K,38,0.0+x01-gap-de,tr+y01,z01
+K,39,0.0+x01+gap+de,tr+y01,z01
+
+
+A,33,37,39,35
+A,36,32,34,38
+
+K,46,-wr/2+x01-gap-de,te+y01,z01
+K,47,+wr/2+x01+gap+de,te+y01,z01
+
+A,36,46,47,37
+
+AOVLAP,ALL
+NUMCMP,area
+
+ADELE,1,2
+ADELE,6,8,2
+ADELE,9,10
+
+ADELE,3,4
+
+LPLOT $/pnum,line,1
+LDELE,20,21
+LDELE,23,24
+
+LDELE,12,14,2
+LDELE,17,19,2
+
+LDELE,22
+
+
+A,1,2,3
+LESIZE,1,,,nr
+LESIZE,2,,,nr
+LESIZE,3,,,nr
+
+! box
+K,11,-l_ff/2+x02,-b_ff/2+y02,z01
+K,12, l_ff/2+x02,-b_ff/2+y02,z01
+K,13, l_ff/2+x02, b_ff/2+y02,z01
+K,14,-l_ff/2+x02, b_ff/2+y02,z01
+
+A,11,12,13,14
+
+!   14                13
+!   o-----------------o
+!   |        1        |
+!   |        o        |
+!   | 4 - 9 / \ 8 - 5 |   ^ Y
+!   |  //  /   \  \\  |   | z
+!   | //  /     \  \\ |   |/
+!   | -  o---*---o  - |   *---> X
+! 36| 32 2       3 33 |37
+!   o-----------------o
+!   11                12
+
+AOVLAP,ALL
+NUMCMP,area
+
+K,101,  0.0+x01, tr+y01,Lr+z01 $L,1,101,nZ
+!==========================================================================!
+! 2D mesh free mesh
+ESIZE,el_size
+
+AMESH,1
+AMESH,2
+AMESH,3
+AMESH,4
+!--------------------------------------------------------------------------!
+! z-extrude: generates volumes w/ mesh by extruding areas
+
+n_lineZ=12		! set manual # of extruding line 
+
+ASEL,ALL
+
+TYPE,21 $MAT,1 $VDRAG,1,,,,,,n_lineZ
+TYPE,22 $MAT,2 $VDRAG,2,,,,,,n_lineZ
+TYPE,23 $MAT,3 $VDRAG,3,,,,,,n_lineZ
+TYPE,24 $MAT,4 $VDRAG,4,,,,,,n_lineZ
+
+!--------------------------------------------------------------------------!
+! compresses the numbering
+
+NUMMRG,NODE,1e-3
+NUMCMP,NODE 
+NUMCMP,ELEM
+
+ !*GET,Kmax,KP,,NUM,MAX
+
+!/PNUM,TYPE,1 $/NUMBER,1 $EPLOT $/eof
+!--------------------------------------------------------------------------!
+! delete 2D elements
+
+ESEL,S,TYPE,,1 $ACLEAR,ALL $ALLSEL
+
+ALLSEL
+!--------------------------------------------------------------------------!
+! FEM model export
+ !*GET,Nmax,NODE,,NUM,MAX
+ !*GET,Emax,ELEM,,NUM,MAX
+
+ !EWRITE,ET_%mac_name%_00,dat,,0,LONG
+ !NWRITE,CT_%mac_name%_00,dat,,0,LONG
+!==========================================================================!
+! Components description
+
+vsel,s,mat,,1 $CM,beam,VOLU	! beam
+vsel,s,mat,,2 $CM, air,VOLU 	! air
+vsel,s,mat,,3 $CM,ele1,VOLU 	! R-electrode
+vsel,s,mat,,4 $CM,ele2,VOLU 	! L-electrode
+
+!==========================================================================!
+*IF,key_bc,EQ,10,THEN	! apply structural BC
+
+ET,21,SOLID95		! define beam elementy type
+ET,22,0			! set air to null element type
+ET,23,0
+ET,24,0
+
+! apply BC
+esel,s,mat,,1	! beam
+NSLE,S
+NSEL,R,LOC,Z,-1,1*0.01
+CM,side1,NODE
+D,ALL,UX,0 $D,ALL,UY,0 $D,ALL,UZ,0 $ALLSEL
+ALLSEL
+
+esel,s,mat,,1	! beam
+NSLE,S
+NSEL,R,LOC,Z,Lr*0.99,Lr*1.01
+CM,side2,NODE
+D,ALL,UX,0 $D,ALL,UY,0 $D,ALL,UZ,0 $ALLSEL
+ALLSEL
+
+*ENDIF
+!--------------------------------------------------------------------------!
+*IF,key_bc,EQ,20,THEN	! apply electrical BC
+
+allsel
+
+emunit,epzro,8.854e-6	! free-space permittivity is equal to 8.854E-6 pF/m
+
+ET,21,SOLID122		! electrostatic solid element
+ET,22,SOLID122
+ET,23,SOLID122
+ET,24,SOLID122
+
+MP,PERX,1,11.7
+MP,PERX,2,11.7
+MP,PERX,3,11.7
+MP,PERX,4,1.00
+
+mat_id_el1=1	! beam
+mat_id_el2=4	! 1 electrode
+mat_id_el3=3	! 2 electrode
+
+! n_el1 at COND1 beam
+! n_el2 at COND2 input
+! n_el3 at COND3 output
+
+esel,s,mat,,mat_id_el1		! beam, elec1
+nsle,s
+CM,COND1,NODE
+CP,1,VOLT,ALL			! 1 electrode:
+*GET,n_el1,NODE,0,num,min	! get master node
+ALLSEL
+
+esel,s,mat,,mat_id_el2		! elec2_in
+nsle,s
+CM,COND2,NODE
+CP,2,VOLT,ALL			! 2 electrode:
+*GET,n_el2,NODE,0,num,min	! get master node
+ALLSEL
+
+esel,s,mat,,mat_id_el3		! elec3_out
+nsle,s
+CM,COND3,NODE
+CP,3,VOLT,ALL			! 3 electrode:
+*GET,n_el3,NODE,0,num,min	! get master node
+ALLSEL
+
+*ENDIF
+!==========================================================================!
+CMSEL,ALL $ALLSEL
+
+ /pbc,u,,1
+ /pbc,cp,,1
+ /pnum,type,1
+ /number,1
+
+EPLOT
+!==========================================================================!
