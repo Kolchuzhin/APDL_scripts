@@ -1,0 +1,61 @@
+emunit,epzro,8.854e-6	! free-space permittivity is equal to 8.854E-6 pF/m
+
+!==========================================================================!
+
+!------------------! Silicon mechanical properties !-----------------------!
+EMUNIT,MKS
+
+! mechanical material properties of <110> Si:
+MP,EX,  1,169e9		! Young's modulus, Pa
+
+MP,NUXY,1,0.066		! Poisson's ratio
+
+MP,DENS,1,2329		! density, kg/m3
+!--------------------------------------------------------------------------!
+!==========================================================================!
+
+
+!==========================================================================!
+!--------------------------------------------------------------------------!
+! Si material properties, uMKSV units
+
+ EX=130e3 $NUXY=0.278		! MPa, <100> Young's modulus/Poisson's ratio
+ EX=169e3 $NUXY=0.066		! MPa, <110> Young's modulus/Poisson's ratio
+ EX=185e3 $NUXY=0.26		! MPa, <111> Young's modulus/Poisson's ratio
+
+ DENS=2.329e-15			! density, kg/um3
+ ALPX=2.6e-6			! thermal expansion, 1/K
+ k=90e6				! thermal conductivity, pW/(um*K)
+ Cp=699e12			! heat capacity, pJ/(kg*K)
+
+MP,EX  ,1,EX
+MP,NUXY,1,NUXY
+MP,DENS,1,DENS
+MP,ALPX,1,ALPX
+mp,KXX,1,k
+mp,C,1,Cp
+!--------------------------------------------------------------------------!
+!==========================================================================!
+
+
+
+!==========================================================================!
+!--------------------------------------------------------------------------!
+! orthotropic elastic material properties of the polysilicon film:
+! uMKSV units
+
+MP,EX,2,152.9e9/1e6	! Young's modulus, MPa=1N/um/um
+MP,EY,2,152.9e9/1e6	! Young's modulus, MPa
+MP,EZ,2,130.1e9/1e6	! Young's modulus, MPa
+
+MP,NUXY,2,0.2		! Poisson's ratio
+MP,NUYZ,2,0.28		! Poisson's ratio
+MP,NUXZ,2,0.28		! Poisson's ratio
+
+MP,GXY,2,79.6e9/1e6	! shear modulus, MPa
+MP,GYZ,2,79.6e9/1e6	! shear modulus, MPa
+MP,GXZ,2,79.6e9/1e6	! shear modulus, MPa
+
+MP,DENS,2,2.330e-15	! density, kg/um3
+!--------------------------------------------------------------------------!
+!==========================================================================!
