@@ -22,3 +22,21 @@ Related model parameter
 + el_ga_2=el_ga			! Electrode gap on right side
 + tr_ra_1=tr_ra			! Possible travel range at fixed finger tips
 + tr_ra_2=tr_ra			! Possible travel range at movable finger tip
+
+
+# Parametric Electrostatic Analysis
+
+The dimensions of the fingers are 40×4×4 μm. The air-gap between the electrodes and the initial electrodes overlap are 2 μm and 20 μm, respectively.
+
+| parameter          |     variation    |
+|:------------------:|:-----------------|
+| motion in operating direction p1, μm     |  -10...4.0  |
+| horizontal shift in y-direction p2, μm   |  -1.8...1.8 |
+| vertical shift in z-direction p3, μm     |  -1.9...4.0 |
+| x-rotation p4, grad       |  -5.0...5.0  |
+| y-rotation p5, grad       |  -2.5...2.5  |
+| z-rotation p6, grad       |  -2.4...2.4  |
+
+# Reference
+
+https://d-nb.info/1005308330/34, pp.80-83
