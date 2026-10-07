@@ -1,0 +1,37 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! 
+! Filename: nsol_export.mac, ANSYS MAPDL
+! by <vladimir.kolchuzhin@ieee.org>
+!
+!
+! Issue: FE modeling/post/ nodal solution (dof=3) export
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+prj_name=arg1
+
+dof=3					! ux, uy, uz
+
+!==========================================================================!
+/post1
+SET,LAST
+
+*GET,NMAX,NODE,,NUM,MAX
+*DEL,Uxyz
+*DIM,Uxyz,,NMAX*dof,1
+
+  *DO,J,1,NMAX,1
+	Uxyz(J*3-2)=UX(J)
+	Uxyz(J*3-1)=UY(J)
+	Uxyz(J*3-0)=UZ(J)
+  *ENDDO
+
+!--------------------------------
+/output,NS_%prj_name%,dat,,append
+*VWRITE,Uxyz(1,1)
+(1E20.12)
+/output
+!==========================================================================!
