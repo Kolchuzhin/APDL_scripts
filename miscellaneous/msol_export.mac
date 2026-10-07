@@ -1,0 +1,53 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! 
+! Filename: nsol_export.mac, ANSYS MAPDL
+! by <vladimir.kolchuzhin@ieee.org>
+!
+!
+! Issue: FE modeling/post/ modal solution (dof=3) export
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+
+prj_name=arg1				! project name
+!num_mode=arg2
+num_mode=10				! number of modes
+
+dof=3					! ux, uy, uz
+
+!==========================================================================!
+/post1
+*GET,NMAX,NODE,,NUM,MAX
+
+*DEL,fmod
+*DEL,Uxyz
+
+*DIM,fmod,,num_mode,1
+*DIM,Uxyz,,NMAX*dof,num_mode
+!--------------------------------
+*DO,I,1,num_mode,1
+  SET,1,I 
+  !PLDISP,1 $PLNS,U,SUM
+  *GET,fmod(I),ACTIVE,,SET,FREQ
+
+  *DO,J,1,NMAX,1
+	Uxyz(J*dof-2,I)=UX(J)
+	Uxyz(J*dof-1,I)=UY(J)
+	Uxyz(J*dof-0,I)=UZ(J)
+  *ENDDO
+
+*ENDDO
+!--------------------------------
+/head,off,off,off,off,off,off  
+/output,fq_%prj_name%,dat,,append	
+*VWRITE,fmod(1)
+(1E20.12)
+/output
+!--------------------------------
+/output,fx_%prj_name%,dat,,append
+*VWRITE,Uxyz(1,1),Uxyz(1,2),Uxyz(1,3),Uxyz(1,4),Uxyz(1,5),Uxyz(1,6),Uxyz(1,7),Uxyz(1,8),Uxyz(1,9),Uxyz(1,10)
+(10E20.12)
+/output
+!==========================================================================!
