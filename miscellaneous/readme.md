@@ -6,7 +6,7 @@
 + parametric sweep
 
 
-### Post-Processing:
-
+### Pre/Post-Processing:
++ mesh export
 + nodal solution export (dof=3: Ux Uy Uz)
 + modal solution export (dof=3: Ux Uy Uz)
