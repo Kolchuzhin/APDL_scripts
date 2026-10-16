@@ -1,0 +1,442 @@
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+! Filename: cont33.mac, ANSYS 9.0, MAPDL
+! structural contact: nanoindentation Plate+Indentor (3D x 2DB)
+! by Kolchuzhin V., 14.08.2006 (c_33), TU Chemnitz / LMGT
+! 
+! load:				ux, uy / fx, fy
+!
+! post:			  
+!				contour plots: U,S,EPEL
+!				Reaction Force (RF) calculation
+!				PLPATH: UX, UY, UZ; SX, SY, SZ, SEqv
+!	
+! rev.1.00	16.10.2026 	GitHuB release
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!
+!
+!                  | uy,ux
+!                  v 
+!             -----o-----
+!     y       \         /
+!     ^        \   2   /			Indentor: diamond
+!     |         \_____/           
+!     o------------*-------------o---> x
+!     |                          |
+!     |            1             |		Plate: sapphire/quartz
+!     o--------------------------o 
+!     ///////////////////////////   
+!
+!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx!
+FINISH	$/CLEAR
+
+/CONTOUR,1,128
+*AFUN,DEG
+/VUP,,Y
+!==========================================================================!
+!-----------------------------input parametrs------------------------------!
+
+/title, structural contact: 3D x 2DB
+prj_name='cont33'
+
+!--------------------------------------
+! units: ! F in uN, L in um, E in GPa !
+!--------------------------------------
+
+! Indentor
+Rind=10.5		! radius, um
+
+! Plate
+Hplt=10			! thickness, um
+Lplt=Rind*1.2		! radius, um
+B1=2			! thickness of refine volume
+L1=5			! length of refine volume
+
+! Load
+fx_load= 14.7e3		! uN
+fy_load=400.0e3		! uN
+
+ux_load=-1.00		! um
+uy_load=-0.70		! um
+
+! Mesh parameters
+el_size1=0.3		! fine mesh
+el_size2=1.0
+
+!el_size1=2.0		! coarse mesh for test
+!el_size2=2.0
+
+! Contact parameters
+FKN_c=1
+FKT_c=1
+TAUMAX_c=1e21
+!==========================================================================!
+/PREP7
+
+! Material properties 
+! sapphire
+MP,EX  ,1,420e3		! Young's modulus MPa
+MP,NUXY,1,0.234		! Poisson's ratio
+MP,MU  ,1,0.037		! Coefficient of friction
+
+! quartz
+!MP,EX  ,1,72e3		! Young's modulus MPa
+!MP,NUXY,1,0.17		! Poisson's ratio
+!MP,MU  ,1,0.037	! Coefficient of friction
+
+! diamond
+MP,EX  ,2,1140e3	! Young's modulus MPa
+MP,NUXY,2,0.07		! Poisson's ratio
+MP,MU  ,2,0.037		! Coefficient of friction
+
+! Elements
+ !ET,1,SOLID45
+ET,1,SOLID95
+ !ET,1,SOLID185
+!---------------
+ET,7,TARGE170       ! 3D TARGET
+!TARGE170 KEYOPT:
+	!0 -- Low  order elements
+	!1 -- High order elements
+KEYOPT,7,1
+!---------------
+ !ET,8,CONTA173     ! 4node X 3dof S-2-S 3D low-order
+ET,8,CONTA174       ! 8node X 3dof S-2-S 3D high-order
+R,8,,,FKN_c,,,,,,TAUMAX_c,,,FKT_c
+!---------------
+! CONTA174 REAL Constants:
+		!  1 - R1 (intern)
+		!  2 - R2 (intern)
+		!  3 - FKN - Contact stiffness (default: 1.0)
+        	!  4 - FTOL                    (default: 0.1)
+           	!  5 - ICONT - initial closure
+         	!  6 - PINB
+           	!  7 - PMIN
+         	!  8 - PMAX
+         	!  9 - TAUMAX (SIGMAF*1/sqrt(3))
+          	! 10 - CNOF - contact offset
+           	! 11 - FKOP
+       		! 12 - FKT
+          	! 13 - COHE sliding resistance  (0)
+			! ...
+			! 21 FACT Static/dynamic ratio Static and Dynamic Friction Coefficients
+			! 22 DC Exponential decay coefficient Static and Dynamic Friction Coefficients
+			! 23 SLTO Allowable elastic slip Using FKT and SLTO
+			! 24 TNOP Maximum allowable tensile contact pressure Chattering Control Parameters
+			! 25 TOLS Target edge extension factor  
+!-----------------
+! CONTA174 KEYOPT:
+KEYOPT,8, 1,0  !  1 - only structural contact (0)
+KEYOPT,8, 2,0  !  2 - Algoritmus: 0 - augmented Lagr.; 1 - Pf; (2) - MPC; 3 - LmN + PfT; 4 - Pure Lm
+KEYOPT,8, 3,0  !  3 - Use with h-elements (no superelements)
+KEYOPT,8, 4,0  !  4 - Location of contact detection point: 0 - Gauss-Point
+KEYOPT,8, 5,4  !  5 - CNOF Automated adjustment: 0 - no; 1 - close; 2 - reduce; 3 - 1+2; 4 - auto 
+KEYOPT,8, 6,0  !  6 - Symmetrical stiffness matrix
+KEYOPT,8, 7,0  !  7 - Element level time inc. control: 0 - No control
+KEYOPT,8, 8,0  !  8 - Spurious Contact Prevention:  0 - no prevention
+KEYOPT,8, 9,0  !  9 - Effect of initial penetration or gap: 0 - include; 1 - exclude;
+KEYOPT,8,10,0  ! 10 - Contact stiffness update:    0 - no update; 1 - auto update: FKT = MU*PRES/SLTO
+KEYOPT,8,11,0  ! 11 - Beam/Shell Thickness Effect: 0 - include; 1 - exclude;
+KEYOPT,8,12,0  ! 12 - Behavior of contact surface: 
+				!               0 - Standart; 
+				!		1 - Rough;
+				!               2 - No separation (sliding permitted); 
+				!		3 - Bonded;
+				!               4 - No separation (always); 
+				!	    	5 - Bonded (always);             
+               			!               6 - Bonded (initial contact);
+!-----------------
+! use auto CNOF/ICONT by setting KEYOPT(5) to close small gaps
+!--------------------------------------------------------------------------!
+! Plate
+K,1,   0,0,0
+K,2,L1  ,0,0
+K,3,Lplt,0,0
+
+KGEN,2,1,3,1,,-B1,,10
+KGEN,2,1,3,1,,-Hplt,,20
+!/pnum,KP,1 $KPLOT
+
+A, 1, 2,12,11
+A,11,12,23,21
+A, 2, 3,23,12
+!/pnum,AREA,1 $APLOT
+
+k_odd=NINT(L1/el_size1)-NINT(L1/el_size1/2)*2
+nx1=NINT(L1/el_size1)+k_odd
+nx2=NINT(Lplt/el_size2)
+ny1=NINT(B1/el_size1)   $sy1=0.5
+ny2=NINT(Hplt/el_size2) $sy2=8.0
+
+LESIZE,1,,,nx1
+LESIZE,4,,,ny1,sy1   $LESIZE,2,,,ny1,1/sy1
+LESIZE,7,,,ny2,1/sy2 $LESIZE,5,,,ny2,sy2   $LESIZE,8,,,ny2,sy2
+!/pnum,LINE,1 $LPLOT
+
+ASEL,S,AREA,,1,3
+TYPE,1
+
+! x=0      L1    Lplt
+! 1        2     3
+! o--------o-----o  y=0
+! |        |     |
+! o--------o     o  y=-B1
+! |         \    |
+! |          \   |
+! |           \  |
+! |            \ |
+! |             \|
+! o--------o-----o  y=-Hplt
+!21       22    23
+
+
+ VROTAT,1,2,3,,,,1,21,-180
+ VATT,1,,1
+ ESIZE,el_size2
+ MSHAPE,0,3D
+ VMESH,1,4,3
+ VMESH,ALL
+ ALLSEL
+ EPLOT
+
+*GET,Kmax_plate,KP,,NUM,MAX
+*GET,Nmax_plate,NODE,,NUM,MAX
+*GET,Emax_plate,ELEM,,NUM,MAX
+!--------------------------------------------------------------------------!
+! Indentor
+K,30,0,Rind,0
+K,31,0,Rind,-Rind
+K,36,0+L1,Rind,0
+
+L,30,31
+
+CIRCLE,30,Rind,31,,90
+CIRCLE,30,Rind-B1,31,,90
+
+L,30,15
+L,30,16
+L,30,2
+
+LOVLAP,33,34,36,37
+L,36,20
+LOVLAP,35,33
+
+LDELE,42,0
+LDELE,38,0
+LDELE,45,0
+!/pnum,LINE,1 $LPLOT
+
+AL,40,41,46,44
+AL,43,44,33,36
+AL,46,39,34,33
+
+ASEL,S,AREA,,24,26
+TYPE,1
+VROTAT,24,25,26,,,,1,21,-180 !
+!/pnum,VOLU,1 $VPLOT
+
+LESIZE,41,,,nx1 $LESIZE,44,,,nx1
+LESIZE,40,,,ny1,1/sy1   $LESIZE,46,,,ny1,1/sy1
+
+VATT,2,,1
+ESIZE,el_size2
+MSHAPE,0,3D
+VMESH,7,9
+VMESH,10,12
+ 
+ALLSEL
+EPLOT
+!--------------------------------------------------------------------------!
+! define contact nodes and elements: conta elements
+ASEL,S,AREA,,4
+ASEL,A,AREA,,14
+NSLA,S,1
+TYPE,8 $REAL,8 $ESURF,,BOTTOM ! TOP/BOTTOM
+ALLSEL
+ !ENORM,ENUM
+
+! define contact nodes and elements: target elements
+ ASEL,S,AREA,,25
+ ASEL,S,AREA,,39
+ ASEL,A,AREA,,29
+ NSLA,S,1
+ TSHAP,QUAD8 !QUAD8
+ TYPE,7 $REAL,8 $ESURF,,TOP ! TOP/BOTTOM
+ ALLSEL
+ !ENORM, ENUM
+
+CNCHECK
+ !ESEL,S,TYPE,,7 $EPLOT
+ !ESEL,S,TYPE,,8 $EPLOT
+ !/pnum,TYPE,1   $EPLOT
+ !/eof
+!--------------------------------------------------------------------------!
+! Apply BC
+
+! bottom fixed
+NSEL,S,LOC,Y,-Hplt					
+D,ALL,UX,0 $D,ALL,UY,0 $D,ALL,UZ,0
+ALLSEL
+
+!symm
+NSEL,S,LOC,Z,0 $D,ALL,UZ,0 $ALLSEL
+
+! node for load
+NSEL,S,LOC,Y,Rind
+CP,1,UY,ALL
+CP,2,UX,ALL
+*GET,load_node,NODE,0,NUM,MIN       ! get master node for load
+ALLSEL
+!--------------------------------------------------------------------------!
+/PBC,ALL,,1
+/PNUM,TYPE,1
+/NUMBER,1
+/PSYMB,ESYS,1
+
+/PNUM,MAT,1
+/COLOR,NUM,ORAN,2
+/COLOR,NUM,YGRE,1
+/NUMBER,1
+/VIEW,1,1,1,1 
+/REPLOT
+EPLOT
+
+!/eof
+FINISH
+!==========================================================================!
+/SOLU
+
+	*GET,t1,ACTIVE,0,TIME,WALL,CPU
+
+ANTYPE,STATIC
+NLGEOM,ON
+ !DELTIM,.1
+
+TIME,1
+ !D,load_node,UY,uy_load
+  F,load_node,FY,-fy_load
+SOLVE
+
+!TIME,2
+ !D,load_node,UX,ux_load
+ !F,load_node,FX,-fx_load
+!SOLVE
+
+	*GET,t2,ACTIVE,0,TIME,WALL,CPU
+	time_solu=NINT((t2-t1)*3600)
+
+FINISH
+!==========================================================================!
+/POST1
+SET,LAST
+!--------------------------------------------------------------------------!
+! ReactionForce calculation: 
+	! 1. nsel
+	! 2. get RF at i-node
+	! 3. sum RF
+
+!----- at fixed plate bottom 
+Fr_total=0
+NSEL,S,LOC,Y,-Hplt $NPLOT
+
+*GET,n_node_set,NODE,0,COUNT	! number of nodes in set
+*GET,n_node_cur,NODE,0,NUM,MIN
+
+ *DO,I,1,n_node_set
+	*GET,fr_i,NODE,n_node_cur,RF,FY
+	Fr_total=Fr_total+fr_i
+	n_node_cur=NDNEXT(n_node_cur)
+ *ENDDO
+ALLSEL
+!--------------------------------------------------------------------------!
+!ESEL,S,MAT,,1
+!ESEL,S,TYPE,,1
+
+/DSCALE,1,1		! 0 scale; 1 not scale
+PLDISP,1		! 0 1 2
+
+PLNSOL,U,SUM
+PLNSOL,S,EQV
+!PLNSOL,EPEL,EQV
+!.....................
+ETABLE,we,SENE			! etable
+SSUM $*GET,WS,SSUM,,ITEM,we	! strain energy
+!.....................
+Nt=NODE(0,0,0)			! test node
+
+ !*GET,Sx_,NODE,Nt,S,X
+ !*GET,Sy_,NODE,Nt,S,Y
+ !*GET,Ux_,NODE,Nt,U,X
+*GET,Umax_y,NODE,Nt,U,Y
+
+/head,off,off,off,off,off,off  
+/output,%prj_name%_stat,dat,,append	
+*VWRITE,NMAX,EMAX,WS,time_solu
+(4E20.12)
+/output
+
+PLNS,U,Y    $*GET,Umax_y,PLNSOL,0,MIN
+PLNS,S,X    $*GET,Smax_x,PLNSOL,0,MAX
+PLNS,S,Y    $*GET,Smax_y,PLNSOL,0,MIN
+PLNS,S,EQV  $*GET,Smax_e,PLNSOL,0,MAX
+
+/head,off,off,off,off,off,off  
+/output,%prj_name%_solu,dat,,append	
+*VWRITE,uy_load,Smax_e,Smax_x,Umax_y,Fr_total
+(5E20.12)
+/output
+!--------------------------------------------------------------------------!
+!PATH
+np1=NODE(-Lplt,0,0)	! path start
+np2=NODE(+Lplt,0,0)	! path end
+
+! x=0      L1    Lplt
+! 1        2     3
+! *========o=====o==> path  y=0
+! |        |     |
+! o--------o     o
+! |         \    |
+! |          \   |
+! |           \  |
+! |            \ |
+! |             \|
+! o--------o-----o
+!21       22    23
+
+PATH,path1,2,,100 $PPATH,1,np1 $PPATH,2,np2
+PDEF,s_x,S,X
+PDEF,s_y,S,Y
+PDEF,s_z,S,Z
+PDEF,s_e,S,EQV
+PLPATH,s_x,s_y,s_z,s_e
+
+!PATH
+np1=NODE(-Lplt,0,0)	! path start
+np2=NODE(+Lplt,0,0)	! path end
+PATH,path1,2,,100 $PPATH,1,np1 $PPATH,2,np2
+PDEF,u_x,U,X
+PDEF,u_y,U,Y
+PDEF,u_z,U,Z
+PLPATH,u_x,u_y,u_z
+
+!PATH
+np1=NODE(0,0,0)		! path start
+np2=NODE(0,0-Hplt,0)	! path end
+PATH,path1,2,,100 $PPATH,1,np1 $PPATH,2,np2
+PDEF,s_x,S,X
+PDEF,s_y,S,Y
+PDEF,s_z,S,Z
+PDEF,s_e,S,EQV
+PLPATH,s_x,s_y,s_z,s_e
+!--------------------------------------------------------------------------!
+ALLSEL
+
+/EDGE,1,1,1	! dsplays the common lines
+
+PLNSOL,U,SUM
+!PLNSOL,S,EQV
+!PLNSOL,EPEL,EQV
+!==========================================================================!
