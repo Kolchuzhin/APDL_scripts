@@ -60,7 +60,7 @@
 
 | model | macros          |    domain          |  analysis |  description                       |
 |:---------:|:----:|:------------------:|:---------:|:------------------------------------------|
-| ![cont33](https://github.com/Kolchuzhin/APDL_scripts/blob/master/structural_contact/cont33.png) | macros: in progress | srtructural | nonlinear static | srtructural contact |
+| ![cont33](https://github.com/Kolchuzhin/APDL_scripts/blob/master/structural_contact/cont33.png) | [cont33.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/structural_contact/cont33.mac) | srtructural | nonlinear static | srtructural contact |
 
 
 
