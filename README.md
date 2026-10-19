@@ -8,7 +8,7 @@
 |:-----:|:---------------:|:------------------:|:---------:|:-----------------------------------------:|
 | ![beam_sta_solu_usum](https://github.com/Kolchuzhin/APDL_scripts/blob/master/beam_sta_solu_usum.png)  | [beam_sta.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/beam_sta.mac)    |  srtructural       | static    | Si microcantilever, point load            |
 ||                     |                    |           |                                           |
-|| [memb_sta.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/memb_sta.mac)                  |  srtructural       | static    | Si membrane, pressure load                |
+| ![memb_sta_solu_usum](https://github.com/Kolchuzhin/APDL_scripts/blob/master/memb_sta_solu_usum.png)| [memb_sta.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/memb_sta.mac)                  |  srtructural       | static    | Si membrane, pressure load                |
 || memb_mod.mac        |  srtructural       | modal     | Si membrane, pressure load                |
 || memb_har.mac        |  srtructural       | harmonic  | Si membrane, pressure load                |
 || memb_tra.mac        |  srtructural       | transient | Si membrane, pressure load                |
