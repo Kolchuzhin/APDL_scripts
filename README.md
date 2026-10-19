@@ -36,10 +36,10 @@
 + description: Piezoelectric (PZE) analysis of PZT-cylinder, terminal input admittance
 
 ## [EM scattering by sphere](https://github.com/Kolchuzhin/dielectric_functions_for_plasmonics/tree/master/scattering_by_sphere)
-+ macros: [sphere_hf_sc.mac](https://github.com/Kolchuzhin/dielectric_functions_for_plasmonics/blob/master/scattering_by_sphere/sphere_hf_sc.mac)
-+ domain: HF Emag
-+ analysis: harmonic 
-+ description: high-frequency (HF) electormagnetic (plane wave) scattering by sphere (Rsphere << wavelength) using HF119 element, SAR calculation
+
+| model | macros          |    domain          |  analysis |  description                       |
+|:---------:|:----:|:------------------:|:---------:|:------------------------------------------|
+|  | [sphere_hf_sc.mac](https://github.com/Kolchuzhin/dielectric_functions_for_plasmonics/blob/master/scattering_by_sphere/sphere_hf_sc.mac) | HF Emag | harmonic | high-frequency (HF) electormagnetic (plane wave) scattering by sphere (Rsphere << wavelength) using HF119 element, SAR calculation |
 
 ## [FEM analysis of a uniaxial MEMS Accelerometer](https://github.com/Kolchuzhin/APDL_scripts/tree/master/accelerometer)
 
@@ -52,8 +52,8 @@
 |  | [a_12_modal.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_12_modal.mac)       | srtructural | modal    | FOM |
 |  | [a_13_harmonic.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_13_harmonic.mac) | srtructural | harmonic | FOM |
 |  |  |  |  |  |
-|       | [a_20_model.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_20_model.mac) | electrostatic | FE-model | FOM |
-|       | [a_21_estatic.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_21_estatic.mac) | electrostatic |  static | FOM |
+|       | [a_20_model.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_20_model.mac)     | electrostatic | FE-model | FOM |
+|       | [a_21_estatic.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_21_estatic.mac) | electrostatic |  static  | FOM |
 
 ## Coupled PiezoResistive (PZR) analysis
 + the elements for PZR analysis in ANSYS MAPDL:
