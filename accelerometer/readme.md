@@ -2,9 +2,23 @@
 
 # FEM analysis of a uniaxial MEMS Accelerometer
 
-![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png)
+| model | macros |    domain          |  analysis |  description                       |
+|:-----:|:------:|:------------------:|:---------:|:----------------------------------:|
+| ![]() | [a_00_layout.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_00_layout.mac) |  | 2D geometry | layout |
+|  |  |  |  |  |
+| ![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png) | [a_10_model.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_10_model.mac) | srtructural | FE-model | FOM |
+|  | [a_11_static.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_11_static.mac)     | srtructural | static   | FOM |
+|  | [a_12_modal.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_12_modal.mac)       | srtructural | modal    | FOM |
+|  | [a_13_harmonic.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_13_harmonic.mac) | srtructural | harmonic | FOM |
+|  |  |  |  |  |
+|       | [a_20_model.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_20_model.mac) | electrostatic | FE-model | FOM |
+|       | [a_21_estatic.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_21_estatic.mac) | electrostatic |  static | FOM |
+|  |  |  |  |  |
+|  | [rompass1_accelZa.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/ROM_model/rompass1_accelZa.mac) |  |  ROM-model prep | ROM |
+
 
 ## ANSYS APDL scripts
+
 ### layout
 * a_00_layout
 ### structural analysis
