@@ -13,10 +13,10 @@
 || memb_har.mac        |  srtructural       | harmonic  | Si membrane, pressure load                |
 || memb_tra.mac        |  srtructural       | transient | Si membrane, pressure load                |
 ||                     |                    |           |                                           |
-|| estat.mac           |  electrostatic     | static    | parallel plate capacitor, capacitance     |
+| ![estat_solu_volt](https://github.com/Kolchuzhin/APDL_scripts/blob/master/estat_solu_volt.png) | estat.mac           |  electrostatic     | static    | parallel plate capacitor, capacitance     |
 || wire_dc.mac         |  electroconduction | static    | current conduction, electrical resistance |
 ||                     |                    |           |                                           |
-|| via_thresis.mac     |  thermal           | static    | heat conduction, thermal resistance       |
+| ![via_thresis_solu_temp](https://github.com/Kolchuzhin/APDL_scripts/blob/master/via_thresis_solu_temp.png) | via_thresis.mac     |  thermal           | static    | heat conduction, thermal resistance       |
 
 
 # Advanced models
