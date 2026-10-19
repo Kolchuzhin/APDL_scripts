@@ -4,7 +4,7 @@
 
 | model | macros |    domain          |  analysis |  description                       |
 |:-----:|:------:|:------------------:|:---------:|:----------------------------------:|
-| ![]() | [a_00_layout.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_00_layout.mac) |  | 2D geometry | layout |
+| ![layout](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/accelerometer_layout.png) | [a_00_layout.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_00_layout.mac) |  | 2D geometry | layout |
 |  |  |  |  |  |
 | ![accelerometer](https://user-images.githubusercontent.com/5137813/128720279-ae7506b0-c020-4a49-a74c-43a6abed948e.png) | [a_10_model.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_10_model.mac) | srtructural | FE-model | FOM |
 |  | [a_11_static.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/a_11_static.mac)     | srtructural | static   | FOM |
