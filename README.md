@@ -2,8 +2,6 @@
 
 # Basic models
 
-![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
-
 | model | macros          |    domain          |  analysis |  description                              |
 |:-----:|:---------------:|:------------------:|:---------:|:-----------------------------------------:|
 | ![beam_sta_solu_usum](https://github.com/Kolchuzhin/APDL_scripts/blob/master/beam_sta_solu_usum.png)  | [beam_sta.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/beam_sta.mac)    |  srtructural       | static    | Si microcantilever, point load            |
@@ -62,7 +60,7 @@
     * SOLID227, KEYOPT(1) = 101 - coupled-field 10-node tetrahedron
 + macros: in progress
 
-## Structural Contact
+## [Structural Contact](https://github.com/Kolchuzhin/APDL_scripts/tree/master/structural_contact)
 
 ### Nanoindentation
 + [Analytical and numerical evaluation of the critical tensile stress for failure event in single-crystal sapphire detected by the combined application of normal and lateral forces](https://www.researchgate.net/publication/379110644_Analytical_and_numerical_evaluation_of_the_critical_tensile_stress_for_failure_event_in_single-crystal_sapphire_detected_by_the_combined_application_of_normal_and_lateral_forces)
@@ -71,10 +69,14 @@
 |:---------:|:----:|:------------------:|:---------:|:------------------------------------------|
 | ![cont33](https://github.com/Kolchuzhin/APDL_scripts/blob/master/structural_contact/cont33.png) | [cont33.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/structural_contact/cont33.mac) | srtructural | nonlinear static | srtructural contact |
 
-
+### Mechanical switch
++ in progress
 
 
 <!--
+
+![models](https://github.com/Kolchuzhin/APDL_scripts/blob/master/models.png)
+
 | macros          |    domain          |  analysis |  description                              |
 |:---------------:|:------------------:|:---------:|:------------------------------------------|
 | beam_sta.mac    |  srtructural       | static    | Si microcantilever, point load            |
