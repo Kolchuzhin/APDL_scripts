@@ -2,11 +2,12 @@
 # ROM analysis (modeling and simulation) of a uniaxial MEMS Accelerometer using ANSYS ROM Tool* 
 
 ## ANSYS APDL scripts:
-* [rompass1_accelZa.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/ROM_model/rompass1_accelZa.mac) == input db/ph model for ROM model generation of a uniaxial polysilicon MEMS accelerometer (accelZa)
-* rompass2_accelZ.mac == ROM-model generation of a uniaxial polysilicon MEMS accelerometer
+* [rompass1_accelZa.mac](https://github.com/Kolchuzhin/APDL_scripts/blob/master/accelerometer/ROM_model/rompass1_accelZa.mac)
+  * input db/ph model for ROM model generation
+* rompass2_accelZ.mac
+  * ROM-model generation
 
-## VHDL-AMS model in hAMSter
-https://github.com/Kolchuzhin/LMGT_MEMS_component_library/tree/master/uniaxial_accelerometer
+## [VHDL-AMS model in hAMSter](https://github.com/Kolchuzhin/LMGT_MEMS_component_library/tree/master/uniaxial_accelerometer)
 
 accelZa_02.vhd
 
